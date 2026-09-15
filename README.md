@@ -4,7 +4,7 @@ A public MCP server that gives AI agents **real Digikala knowledge**: search, **
 
 **Live endpoint:** `https://digikala-mcp.mmdju.workers.dev/mcp` (Streamable HTTP, stateless)
 
-**[نسخه فارسی](README_FA.md)** · **[Examples](examples/sample-calls.md)**
+**[نسخه فارسی](README_FA.md)** · **[Examples](examples/sample-calls.md)** · **[Tool reference](docs/tools.md)** · **[Changelog](CHANGELOG.md)**
 
 ## Connect in 30 seconds
 
@@ -43,7 +43,7 @@ Notes for agent builders:
 - Anything with a **budget** or the word **"best"** goes to **`find_best_value`** - plain search only sees one page.
 - Product counts are **Digikala's own estimates** and drift between pages - treat them as approximate.
 - Results are **capped** (default 10, max 30) to protect agent context. Specs are capped at 60 attributes unless narrowed.
-- See **[examples/sample-calls.md](examples/sample-calls.md)** for five copy-paste conversation flows.
+- See **[examples/sample-calls.md](examples/sample-calls.md)** for five copy-paste conversation flows, and **[docs/tools.md](docs/tools.md)** for the full parameter reference.
 
 ## Data source
 
