@@ -1,9 +1,0 @@
-name = "digikala-mcp"
-main = "dist/worker.js"
-compatibility_date = "2026-09-01"
-# Cloudflare account: Mmdju (workers.dev subdomain: mmdju)
-account_id = "525eb5c067d16e8bcb2eab23b20ee7a1"
-
-# Keyless and stateless: no bindings and no secrets. The compact-response
-# cache is per-isolate (best effort) - it only reduces how often we call
-# Digikala, never affects correctness.
