@@ -1,0 +1,5 @@
+{
+  "mcpServers": {
+    "digikala": { "url": "https://digikala-mcp.mmdju.workers.dev/mcp" }
+  }
+}
