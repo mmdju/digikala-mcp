@@ -1,0 +1,42 @@
+{
+  "name": "digikala-mcp",
+  "private": true,
+  "version": "0.1.0",
+  "license": "MIT",
+  "description": "MCP server for Digikala: search, compare and price-check products on Iran's largest marketplace. Read-only, no API key.",
+  "keywords": [
+    "digikala",
+    "mcp",
+    "model-context-protocol",
+    "cloudflare-workers",
+    "price-comparison"
+  ],
+  "homepage": "https://github.com/mmdju/digikala-mcp#readme",
+  "bugs": {
+    "url": "https://github.com/mmdju/digikala-mcp/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mmdju/digikala-mcp.git"
+  },
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "start": "node dist/index.js",
+    "serve": "node dist/index.js --http",
+    "test": "npm run build && node --test tests/normalize.test.mjs tests/projection.test.mjs",
+    "test:live": "npm run build && node scripts/test-client.mjs",
+    "probe": "node scripts/probe-api.mjs",
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.5.0",
+    "wrangler": "^3.0.0"
+  }
+}
