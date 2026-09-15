@@ -4,7 +4,7 @@
 
 **آدرس زنده:** `https://digikala-mcp.mmdju.workers.dev/mcp` (Streamable HTTP، بدون state)
 
-**[English version](README.md)** · **[مثال‌ها](examples/sample-calls.md)**
+**[English version](README.md)** · **[مثال‌ها](examples/sample-calls.md)** · **[مرجع ابزارها](docs/tools.md)** · **[تغییرات](CHANGELOG.md)**
 
 ## اتصال در ۳۰ ثانیه
 
@@ -43,7 +43,7 @@
 - هرچی **بودجه** یا کلمه **«بهترین»** داره با **`find_best_value`** برو — سرچ ساده فقط یه صفحه رو می‌بینه.
 - تعداد نتایج **تخمین خود دیجی‌کالاست** و بین صفحه‌ها جابه‌جا میشه — تقریبی حسابش کن.
 - نتیجه‌ها **سقف دارن** (پیش‌فرض ۱۰، حداکثر ۳۰) تا کانتکست ایجنت حفظ بشه. مشخصات هم سقف ۶۰ تا دارن مگه اینکه محدودشون کنی.
-- **پنج تا مکالمه آماده** کپی-پیست تو **[examples/sample-calls.md](examples/sample-calls.md)** هست.
+- **پنج تا مکالمه آماده** کپی-پیست تو **[examples/sample-calls.md](examples/sample-calls.md)** هست، و مرجع کامل پارامترها تو **[docs/tools.md](docs/tools.md)**.
 
 نکته: **فارسی رو می‌فهمه** — نیم‌فاصله، ی/ک عربی و ارقام فارسی خودش مرتب میشن.
 
