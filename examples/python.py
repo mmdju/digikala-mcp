@@ -1,6 +1,6 @@
 """Minimal client for the hosted Digikala MCP service (stdlib only).
 
-No install: python client.py
+No install: python examples/python.py
 
 Talks Streamable HTTP the same way verify-live.mjs does: initialize,
 list tools, call search_digikala + product_details, print compact cards.
