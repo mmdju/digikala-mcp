@@ -59,7 +59,7 @@
 حرف منو قبول نکن — خودت سرور زنده رو چک کن:
 
 ```bash
-node scripts/verify-live.mjs   # فقط نود ۱۸ می‌خواد، نصب لازم نداره
+node scripts/verify-live.mjs   # فقط Node.js ۱۸ می‌خواد، نصب لازم نداره
 ```
 
 هر ۱۶ ابزار رو لیست می‌کنه، یه سرچ + جزئیات + مسیرهای خطا رو اجرا می‌کنه و قرارداد صداقت دیتا رو چک می‌کنه. همون اسکریپت **هر ساعت تو CI** اجرا میشه ([![Live verify](https://github.com/mmdju/digikala-mcp/actions/workflows/verify.yml/badge.svg)](https://github.com/mmdju/digikala-mcp/actions/workflows/verify.yml)) — اگه endpoint یا API دیجی‌کالا عوض بشه بج قرمز میشه. معماری تو [docs/architecture.md](docs/architecture.md)، کلاینت آماده تو [examples/python.py](examples/python.py).
