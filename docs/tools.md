@@ -123,8 +123,6 @@ Returns: `variants` (colour, size, `price_toman`, seller + grade + trust, warran
 
 ## `search_filters`
 
-## `search_filters`
-
 **What can be filtered for a query**: brand ids with Persian/English names, colour ids, category ids, the real price range in Toman, seller types and attribute groups (OS, storage...). Facets only, no products.
 
 | Param | Type | Required | Notes |
