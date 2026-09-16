@@ -47,11 +47,11 @@ async function main() {
 
   await rpc("notifications/initialized", {});
 
-  // 1. Tool list: expect the 14 public tools.
+  // 1. Tool list: expect the 16 public tools.
   const listed = await rpc("tools/list", {});
   const names = (listed.result?.tools ?? []).map((t) => t.name);
-  check("tools/list returns 14 tools", names.length === 14, `${names.length} tools`);
-  for (const must of ["search_digikala", "product_details", "product_price_chart", "find_best_value"]) {
+  check("tools/list returns 16 tools", names.length === 16, `${names.length} tools`);
+  for (const must of ["search_digikala", "product_details", "product_price_chart", "find_best_value", "product_variants", "search_filters"]) {
     check(`tool present: ${must}`, names.includes(must));
   }
   const readonly = (listed.result?.tools ?? []).every((t) => t.annotations?.readOnlyHint === true);
