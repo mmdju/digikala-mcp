@@ -52,6 +52,16 @@
 
 نکته: **فارسی رو می‌فهمه** — نیم‌فاصله، ی/ک عربی و ارقام فارسی با [fa-text-utils](https://github.com/mmdju/fa-text-utils) مرتب میشن (همون هلپرهای کوچیک، جدا منتشر شدن).
 
+## اعتماد، قابل راستی‌آزمایی
+
+حرف منو قبول نکن — خودت سرور زنده رو چک کن:
+
+```bash
+node scripts/verify-live.mjs   # فقط نود ۱۸ می‌خواد، نصب لازم نداره
+```
+
+هر ۱۴ ابزار رو لیست می‌کنه، یه سرچ + جزئیات + مسیرهای خطا رو اجرا می‌کنه و قرارداد صداقت دیتا رو چک می‌کنه. همون اسکریپت **هر ساعت تو CI** اجرا میشه ([![Live verify](https://github.com/mmdju/digikala-mcp/actions/workflows/verify.yml/badge.svg)](https://github.com/mmdju/digikala-mcp/actions/workflows/verify.yml)) — اگه endpoint یا API دیجی‌کالا عوض بشه بج قرمز میشه. معماری تو [docs/architecture.md](docs/architecture.md)، کلاینت آماده تو [examples/python.py](examples/python.py).
+
 ## منبع داده
 
 وب API عمومی دیجی‌کالا (**مستند نیست، بدون اطلاع قبلی عوض میشه**). این پروژه **وابسته به دیجی‌کالا نیست** و تاییدش رو نداره.
