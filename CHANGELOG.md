@@ -2,6 +2,11 @@
 
 Releases of the **hosted service** (`https://digikala-mcp.mmdju.workers.dev/mcp`). Dates are UTC.
 
+## 0.4.0 - 2026-09-16
+
+- New tools: **`product_variants`** (every colour/size combo with its own price, seller, grade and warranty - the default card price is often not the cheapest), **`search_filters`** (brand/color/category ids, real price range, attribute groups - makes `brand_ids` actually usable).
+- Search results now point at `search_filters` for filter discovery.
+
 ## 0.3.0 - 2026-09-16
 
 - New tools: **`product_price_chart`** (short price history with seller per point), **`product_questions`** (buyer Q&A, no guessed answers), **`get_products_batch`** (cards for up to 10 ids, feeds `compare_products`).
