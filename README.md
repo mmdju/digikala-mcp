@@ -1,5 +1,7 @@
 # Digikala MCP - Shop intelligence for AI agents
 
+![Digikala MCP banner](assets/digikala-mcp.png)
+
 A public MCP server that gives AI agents **real Digikala knowledge**: search, **prices in Toman**, discounts, ratings, sellers, reviews, deals and bestsellers. **Read-only, no key needed.**
 
 **Live endpoint:** `https://digikala-mcp.mmdju.workers.dev/mcp` (Streamable HTTP, stateless)
