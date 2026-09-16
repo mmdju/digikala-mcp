@@ -22,7 +22,7 @@ Any MCP client, **one URL**. Cline / Cursor / Claude Desktop (`mcp.json` style):
 
 Then just talk: **"best Samsung phone under 20 million Toman"**, **"is this laptop any good?"**, **"what is on deal today?"**, **"what is popular in Iran right now?"**.
 
-## 14 tools
+## 16 tools
 
 | Tool | What it answers |
 |---|---|
@@ -34,6 +34,8 @@ Then just talk: **"best Samsung phone under 20 million Toman"**, **"is this lapt
 | `product_questions` | "What did buyers ask?" - questions + answer counts |
 | `get_products_batch` | Shortlist cards for **up to 10 ids** - feeds `compare_products` |
 | `product_url` | Product id to **shareable URL** + title |
+| `product_variants` | "Which colour is cheapest?" - **every variant with its own price + seller** |
+| `search_filters` | "Which brands exist for X?" - **brand/color/category ids + price range** |
 | `product_reviews` | "Is it any good?" - **buyer-only** and min-rating filters |
 | `compare_products` | "Which of these?" - **only the specs that actually differ** |
 | `find_best_value` | "Best X under Y Toman" - **ranked picks with seller grade** |
@@ -59,7 +61,7 @@ Don't take my word for it - check the live server yourself:
 node scripts/verify-live.mjs   # needs node 18+, nothing to install
 ```
 
-It lists all 14 tools over Streamable HTTP, runs a search + details read + error paths, and asserts the honest-data contract. The same script runs **hourly in CI** ([![Live verify](https://github.com/mmdju/digikala-mcp/actions/workflows/verify.yml/badge.svg)](https://github.com/mmdju/digikala-mcp/actions/workflows/verify.yml)) - if the endpoint or Digikala's API drifts, the badge goes red. See [docs/architecture.md](docs/architecture.md) for how a question becomes an answer, and [examples/python.py](examples/python.py) for a copy-paste client.
+It lists all 16 tools over Streamable HTTP, runs a search + details read + error paths, and asserts the honest-data contract. The same script runs **hourly in CI** ([![Live verify](https://github.com/mmdju/digikala-mcp/actions/workflows/verify.yml/badge.svg)](https://github.com/mmdju/digikala-mcp/actions/workflows/verify.yml)) - if the endpoint or Digikala's API drifts, the badge goes red. See [docs/architecture.md](docs/architecture.md) for how a question becomes an answer, and [examples/python.py](examples/python.py) for a copy-paste client.
 
 ## Data source
 
