@@ -11,6 +11,6 @@ Releases of the **hosted service** (`https://digikala-mcp.mmdju.workers.dev/mcp`
 
 ## 0.1.0 - 2026-09-11
 
-- First public release: **11 tools** - suggest, search, category, details, reviews, compare, best value, deals, bestsellers, similar, URL.
+- First public release: **10 tools** - suggest, search, category, details, reviews, compare, best value, deals, bestsellers, similar (`product_url` came in 0.2.0).
 - Persian handling: yeh/kaf folding, Persian digits, compound-word retry.
 - Compact cards (~5KB for 20 products instead of ~700KB raw).
