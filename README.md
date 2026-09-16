@@ -51,6 +51,16 @@ Notes for agent builders:
 - See **[examples/sample-calls.md](examples/sample-calls.md)** for six copy-paste conversation flows, and **[docs/tools.md](docs/tools.md)** for the full parameter reference.
 - Persian queries are normalized with [fa-text-utils](https://github.com/mmdju/fa-text-utils) (yeh/kaf folding, Persian digits, ZWNJ variants) - the same tiny helpers, published separately.
 
+## Trust, verified
+
+Don't take my word for it - check the live server yourself:
+
+```bash
+node scripts/verify-live.mjs   # needs node 18+, nothing to install
+```
+
+It lists all 14 tools over Streamable HTTP, runs a search + details read + error paths, and asserts the honest-data contract. The same script runs **hourly in CI** ([![Live verify](https://github.com/mmdju/digikala-mcp/actions/workflows/verify.yml/badge.svg)](https://github.com/mmdju/digikala-mcp/actions/workflows/verify.yml)) - if the endpoint or Digikala's API drifts, the badge goes red. See [docs/architecture.md](docs/architecture.md) for how a question becomes an answer, and [examples/python.py](examples/python.py) for a copy-paste client.
+
 ## Data source
 
 Digikala's public web API (**undocumented, may change without notice**). This project is **not affiliated with or endorsed by Digikala**.
