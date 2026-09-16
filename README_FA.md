@@ -22,7 +22,7 @@
 
 بعدش فقط حرف بزن: **«بهترین گوشی سامسونگ زیر ۲۰ میلیون»**، **«این لپ‌تاپ خوبه؟»**، **«امروز چی تخفیف خورده؟»**، **«الان تو ایران چی پرفروشه؟»**.
 
-## ۱۴ ابزار
+## ۱۶ ابزار
 
 | ابزار | به چه دردی می‌خوره |
 |---|---|
@@ -34,6 +34,8 @@
 | `product_questions` | «خریدارها چی پرسیدن؟» — پرسش‌ها + تعداد جواب |
 | `get_products_batch` | کارت‌های **تا ۱۰ آیدی** — ورودی `compare_products` |
 | `product_url` | آیدی کالا به **لینک قابل اشتراک** + عنوان |
+| `product_variants` | «کدوم رنگ ارزون‌تره؟» — **همه رنگ‌ها با قیمت و فروشنده خودشون** |
+| `search_filters` | «برای X چه برندهایی هست؟» — **آیدی برند/رنگ/دسته + رنج قیمت** |
 | `product_reviews` | «خوبه؟» — **فقط خریدارها** و حداقل نمره |
 | `compare_products` | «کدومشون؟» — **فقط مشخصاتی که واقعا فرق دارن** |
 | `find_best_value` | «بهترین X زیر Y تومان» — **انتخاب‌های رتبه‌بندی‌شده با گرید فروشنده** |
@@ -60,7 +62,7 @@
 node scripts/verify-live.mjs   # فقط نود ۱۸ می‌خواد، نصب لازم نداره
 ```
 
-هر ۱۴ ابزار رو لیست می‌کنه، یه سرچ + جزئیات + مسیرهای خطا رو اجرا می‌کنه و قرارداد صداقت دیتا رو چک می‌کنه. همون اسکریپت **هر ساعت تو CI** اجرا میشه ([![Live verify](https://github.com/mmdju/digikala-mcp/actions/workflows/verify.yml/badge.svg)](https://github.com/mmdju/digikala-mcp/actions/workflows/verify.yml)) — اگه endpoint یا API دیجی‌کالا عوض بشه بج قرمز میشه. معماری تو [docs/architecture.md](docs/architecture.md)، کلاینت آماده تو [examples/python.py](examples/python.py).
+هر ۱۶ ابزار رو لیست می‌کنه، یه سرچ + جزئیات + مسیرهای خطا رو اجرا می‌کنه و قرارداد صداقت دیتا رو چک می‌کنه. همون اسکریپت **هر ساعت تو CI** اجرا میشه ([![Live verify](https://github.com/mmdju/digikala-mcp/actions/workflows/verify.yml/badge.svg)](https://github.com/mmdju/digikala-mcp/actions/workflows/verify.yml)) — اگه endpoint یا API دیجی‌کالا عوض بشه بج قرمز میشه. معماری تو [docs/architecture.md](docs/architecture.md)، کلاینت آماده تو [examples/python.py](examples/python.py).
 
 ## منبع داده
 
