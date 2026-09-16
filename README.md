@@ -58,7 +58,7 @@ Notes for agent builders:
 Don't take my word for it - check the live server yourself:
 
 ```bash
-node scripts/verify-live.mjs   # needs node 18+, nothing to install
+node scripts/verify-live.mjs   # needs Node.js 18+, nothing to install
 ```
 
 It lists all 16 tools over Streamable HTTP, runs a search + details read + error paths, and asserts the honest-data contract. The same script runs **hourly in CI** ([![Live verify](https://github.com/mmdju/digikala-mcp/actions/workflows/verify.yml/badge.svg)](https://github.com/mmdju/digikala-mcp/actions/workflows/verify.yml)) - if the endpoint or Digikala's API drifts, the badge goes red. See [docs/architecture.md](docs/architecture.md) for how a question becomes an answer, and [examples/python.py](examples/python.py) for a copy-paste client.
