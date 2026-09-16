@@ -1,6 +1,6 @@
 # Tool reference
 
-Input/output reference for all **11 tools**. Types only - no internals. For conversation flows, see [examples/sample-calls.md](../examples/sample-calls.md).
+Input/output reference for all **14 tools**. Types only - no internals. For conversation flows, see [examples/sample-calls.md](../examples/sample-calls.md).
 
 Every tool is **read-only** and needs **no credentials**. Result lists are **capped** (default 10, max 30). All prices are in **Toman**.
 
@@ -74,6 +74,34 @@ Browse **one category by id**, drill into sub-categories. Same compact cards as 
 | `include_specs` | boolean | no | Default true - set **false** to omit specs and save context |
 
 Specs are **capped at 60 attributes** unless narrowed.
+
+## `product_price_chart`
+
+Short **price history** for one product: daily points with price in Toman, seller and warranty per point. A **rolling window of about a week, not full history** - use it to say whether now is cheap or not.
+
+| Param | Type | Required | Notes |
+|---|---|---|---|
+| `id` | number | **yes** | The dkp- number |
+
+Returns: `current_price_toman`, `cheapest_in_window_toman`, `window_days`, per-variant `points` (`day`, `price_toman`, `seller`, `warranty`).
+
+## `product_questions`
+
+**Questions buyers asked** about one product. Answers are often empty (sellers rarely reply), so this returns questions with their `answer_count` - not guessed answers.
+
+| Param | Type | Required | Notes |
+|---|---|---|---|
+| `id` | number | **yes** | The dkp- number |
+| `page` | number | no | 1-based page number |
+| `limit` | number | no | Default 10, max 30 |
+
+## `get_products_batch`
+
+**Cards for up to 10 product ids in one call** - build a shortlist from search, then hand 2-5 of them to `compare_products`. Unknown ids are reported in `missing_ids`, not silently dropped.
+
+| Param | Type | Required | Notes |
+|---|---|---|---|
+| `ids` | number[] | **yes** | 1 to 10 product ids |
 
 ## `product_url`
 
