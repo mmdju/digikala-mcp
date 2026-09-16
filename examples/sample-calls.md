@@ -1,6 +1,6 @@
 # Sample conversations (copy-paste)
 
-Five flows that show what the server is good at. Each one is **user asks → agent calls → user gets**. Prices below are examples from testing, not live quotes - always open the product URL before buying.
+Six flows that show what the server is good at. Each one is **user asks → agent calls → user gets**. Prices below are examples from testing, not live quotes - always open the product URL before buying.
 
 ---
 
@@ -85,6 +85,23 @@ Agent calls:
 ```
 
 User gets: **Digikala's own recommendations** for that product, then the **cheapest matches** for the same query - pick from either list.
+
+---
+
+## 6. "Is now a good time to buy?"
+
+User:
+
+> قیمت این گوشی پایین‌تر هم میاد؟ الان بخرم؟
+
+Agent calls:
+
+```json
+{ "tool": "product_price_chart", "arguments": { "id": 12345678 } }
+{ "tool": "product_questions", "arguments": { "id": 12345678, "limit": 5 } }
+```
+
+User gets: **today's price vs the cheapest point in the window** (with which seller sold it cheap), plus **what other buyers asked** - enough to decide now vs later.
 
 ---
 
