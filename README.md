@@ -22,7 +22,7 @@ Any MCP client, **one URL**. Cline / Cursor / Claude Desktop (`mcp.json` style):
 
 Then just talk: **"best Samsung phone under 20 million Toman"**, **"is this laptop any good?"**, **"what is on deal today?"**, **"what is popular in Iran right now?"**.
 
-## 11 tools
+## 14 tools
 
 | Tool | What it answers |
 |---|---|
@@ -30,6 +30,9 @@ Then just talk: **"best Samsung phone under 20 million Toman"**, **"is this lapt
 | `search_digikala` | "Show me X", price checks, filters + sorting + paging |
 | `browse_category` | Browse a category, **drill into sub-categories** |
 | `product_details` | Everything about one product: **price, seller, warranty, specs, reviews** |
+| `product_price_chart` | "Is now cheap?" - **short price history with seller per point** |
+| `product_questions` | "What did buyers ask?" - questions + answer counts |
+| `get_products_batch` | Shortlist cards for **up to 10 ids** - feeds `compare_products` |
 | `product_url` | Product id to **shareable URL** + title |
 | `product_reviews` | "Is it any good?" - **buyer-only** and min-rating filters |
 | `compare_products` | "Which of these?" - **only the specs that actually differ** |
