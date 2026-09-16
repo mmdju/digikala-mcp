@@ -21,7 +21,7 @@ flowchart LR
 What this means:
 
 - **Stateless.** Every request stands alone - no sessions, no accounts, nothing to log in to.
-- **Read-only.** All 14 tools carry `readOnlyHint`. Nothing here can change, delete or order anything.
+- **Read-only.** All 16 tools carry `readOnlyHint`. Nothing here can change, delete or order anything.
 - **No storage.** The only memory is a short-lived response cache (minutes, per isolate). Prices, stock and discounts are re-read from Digikala every time the cache expires.
 - **Rate-limit aware.** Requests are paced and retried with backoff, so bursts never leave this box as bursts.
 - **Undocumented upstream.** Digikala's public API can change without notice - this service tracks it and adapts, which is exactly why the [verify script](scripts/verify-live.mjs) exists.
