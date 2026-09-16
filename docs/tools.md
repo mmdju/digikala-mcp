@@ -1,6 +1,6 @@
 # Tool reference
 
-Input/output reference for all **14 tools**. Types only - no internals. For conversation flows, see [examples/sample-calls.md](../examples/sample-calls.md).
+Input/output reference for all **16 tools**. Types only - no internals. For conversation flows, see [examples/sample-calls.md](../examples/sample-calls.md).
 
 Every tool is **read-only** and needs **no credentials**. Result lists are **capped** (default 10, max 30). All prices are in **Toman**.
 
@@ -39,7 +39,7 @@ Search products, get **compact cards**: price in Toman, discount, rating, stock,
 | `min_rating` | number | no | 0-5, low-review products excluded |
 | `only_marketable` | boolean | no | Default true |
 | `has_discount` | boolean | no | Only `discount_percent > 0` |
-| `brand_ids` | number[] | no | Up to 5 (ids appear in a search response's `filters`) |
+| `brand_ids` | number[] | no | Up to 5 - get the ids from **`search_filters`** (no brand list exists anywhere else) |
 | `seller_type` | string | no | `trusted` · `official` · `roosta` |
 | `ready_to_ship` | boolean | no | Only Digikala-warehouse stock (fastest delivery) |
 | `ship_by_seller` | boolean | no | Only products that ship from their own seller |
@@ -110,6 +110,28 @@ Product id to **shareable URL + title**. One cached read, not a URL guess - slug
 | Param | Type | Required | Notes |
 |---|---|---|---|
 | `id` | number | **yes** | The dkp- number |
+
+## `product_variants`
+
+**Every colour/size combo of one product** with its own price, seller, grade, warranty and stock. The card only shows the default variant, which is often **not the cheapest** - this answers "which colour is cheapest?" and "who else sells it?".
+
+| Param | Type | Required | Notes |
+|---|---|---|---|
+| `id` | number | **yes** | The dkp- number |
+
+Returns: `variants` (colour, size, `price_toman`, seller + grade + trust, warranty, `lead_days`), `cheapest_variant_toman`, `default_variant_cheapest`. `best_price_last_month` is Digikala's own flag, shown as-is.
+
+## `search_filters`
+
+## `search_filters`
+
+**What can be filtered for a query**: brand ids with Persian/English names, colour ids, category ids, the real price range in Toman, seller types and attribute groups (OS, storage...). Facets only, no products.
+
+| Param | Type | Required | Notes |
+|---|---|---|---|
+| `query` | string | **yes** | E.g. `گوشی`, `لپ تاپ` |
+
+Feed brand ids into `search_digikala` `brand_ids`, category ids into `category_id`. Price/colour filtering on search stays client-side.
 
 ## `product_reviews`
 
