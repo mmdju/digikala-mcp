@@ -1,6 +1,6 @@
 # Sample conversations (copy-paste)
 
-Six flows that show what the server is good at. Each one is **user asks → agent calls → user gets**. Prices below are examples from testing, not live quotes - always open the product URL before buying.
+Seven flows that show what the server is good at. Each one is **user asks → agent calls → user gets**. Prices below are examples from testing, not live quotes - always open the product URL before buying.
 
 ---
 
@@ -102,6 +102,23 @@ Agent calls:
 ```
 
 User gets: **today's price vs the cheapest point in the window** (with which seller sold it cheap), plus **what other buyers asked** - enough to decide now vs later.
+
+---
+
+## 7. "Which colour is cheapest? What brands exist?"
+
+User:
+
+> همین گوشی با رنگ دیگه ارزون‌تر نیست؟ برندهای دیگه‌ش چیا هستن؟
+
+Agent calls:
+
+```json
+{ "tool": "product_variants", "arguments": { "id": 12345678 } }
+{ "tool": "search_filters", "arguments": { "query": "گوشی" } }
+```
+
+User gets: **every colour/size with its own price, seller and warranty** (often cheaper than the default card price), plus the **brand ids to narrow the search** and the real price range.
 
 ---
 
