@@ -53,6 +53,10 @@ Notes for agent builders:
 - See **[examples/sample-calls.md](examples/sample-calls.md)** for seven copy-paste conversation flows, and **[docs/tools.md](docs/tools.md)** for the full parameter reference.
 - Persian queries are normalized with [fa-text-utils](https://github.com/mmdju/fa-text-utils) (yeh/kaf folding, Persian digits, ZWNJ variants) - the same tiny helpers, published separately.
 
+## How it works
+
+`AI agent → POST /mcp (no key) → stateless worker → Digikala public web API → small cards back (Toman, rating, URL).` No sessions, no accounts, no database — only a short-lived response cache. Requests are paced with backoff. Full diagram in [docs/architecture.md](docs/architecture.md).
+
 ## Trust, verified
 
 Don't take my word for it - check the live server yourself:
