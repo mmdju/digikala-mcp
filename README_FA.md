@@ -56,7 +56,31 @@
 
 ## چطور کار می‌کنه
 
-`ایجنت → POST /mcp (بدون کلید) → ورکر بدون state → وب API عمومی دیجی‌کالا → کارت‌های کوچیک (تومان، امتیاز، لینک).` بدون سشن، بدون اکانت، بدون دیتابیس — فقط یه کش کوتاه‌مدت. درخواست‌ها با فاصله و backoff فرستاده می‌شن. دیاگرام کامل تو [docs/architecture.md](docs/architecture.md).
+سوال چطور به جواب تبدیل می‌شه. هیچ دیتای کاربری هیچ‌جای این مسیر ذخیره نمی‌شه.
+
+```mermaid
+flowchart LR
+    subgraph you [Your machine]
+        agent[AI agent<br/>Cline / Cursor / Claude]
+    end
+    subgraph cf [Cloudflare Workers]
+        worker[digikala-mcp<br/>stateless, no database]
+    end
+    dk[(Digikala public web API<br/>api.digikala.com)]
+
+    agent -->|POST /mcp<br/>Streamable HTTP, no key| worker
+    worker -->|HTTPS + polite pacing<br/>reads only| dk
+    dk -->|compact JSON| worker
+    worker -->|small cards<br/>toman, rating, URL| agent
+```
+
+این یعنی:
+
+- **بدون state.** هر درخواست مستقله — بدون سشن، بدون اکانت، بدون لاگین.
+- **فقط خواندنی.** هر ۱۶ ابزار `readOnlyHint` دارن. هیچ‌چیز این‌جا نمی‌تونه چیزی رو عوض کنه، پاک کنه یا سفارش بده.
+- **بدون ذخیره‌سازی.** تنها حافظه یه کش کوتاه‌مدت جواب‌هاست (چند دقیقه، جدا برای هر isolate). قیمت، موجودی و تخفیف هر بار که کش منقضی بشه دوباره از دیجی‌کالا خونده می‌شن.
+- **مودب با ریت‌لیمیت.** درخواست‌ها با فاصله فرستاده و با backoff تکرار می‌شن، پس موج درخواست هیچ‌وقت از این باکس بیرون نمی‌زنه.
+- **upstream مستند نیست.** وب API عمومی دیجی‌کالا می‌تونه بدون اطلاع عوض بشه — این سرویس دنبالش می‌کنه و خودش رو وفق می‌ده، و دقیقاً به همین دلیله که [اسکریپت verify](scripts/verify-live.mjs) وجود داره.
 
 ## اعتماد، قابل راستی‌آزمایی
 
