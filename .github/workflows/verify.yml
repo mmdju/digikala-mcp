@@ -6,6 +6,9 @@ on:
   workflow_dispatch:
 
 jobs:
+  # A red badge must mean "broken". Digikala's CDN intermittently
+  # challenges the Actions region, so a failed first run gets one
+  # retry (after a cooldown) before the badge is allowed to go red.
   verify:
     runs-on: ubuntu-latest
     steps:
@@ -14,3 +17,14 @@ jobs:
         with:
           node-version: 20
       - run: node scripts/verify-live.mjs
+
+  retry:
+    runs-on: ubuntu-latest
+    needs: verify
+    if: failure()
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: sleep 300 && node scripts/verify-live.mjs
