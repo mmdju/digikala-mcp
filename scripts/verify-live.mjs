@@ -1,5 +1,5 @@
 // Verify the LIVE hosted endpoint speaks MCP correctly.
-// Anyone can run this - it only needs node 18+, no install:
+// Anyone can run this - it only needs Node.js 18+, no install:
 //
 //   node verify-live.mjs
 //
@@ -7,8 +7,18 @@
 // tools/call for a search, a details read and an invalid-id error path,
 // and asserts the honest-data contract (toman prices, null stars under
 // the review floor, empty envelope on misses). No source needed.
+//
+// Flake policy (why this file looks the way it does):
+// Digikala's CDN sometimes answers the GitHub Actions region with a
+// cookie challenge instead of data - the worker then correctly returns
+// isError with "Digikala's CDN keeps asking...". That is an upstream
+// block, not a broken server, so those checks report SKIP (exit 0) and
+// only real contract violations report FAIL (exit 1).
 const ENDPOINT = process.env.DIGIKALA_MCP_URL ?? "https://digikala-mcp.mmdju.workers.dev/mcp";
 const UA = { "user-agent": "digikala-mcp-verify/1.0" };
+// Matches the worker's BLOCKED_MSG (src/config.ts). If Digikala rewords
+// that message, update this prefix alongside it.
+const BLOCKED_PREFIX = "Digikala's CDN keeps asking";
 
 let id = 1;
 async function rpc(method, params = {}) {
@@ -36,6 +46,35 @@ function check(name, ok, detail = "") {
   console.log(`${ok ? "PASS" : "FAIL"}  ${name}${detail ? " - " + detail : ""}`);
 }
 
+// An upstream block is information, not a failure: the worker answered
+// correctly, Digikala just refused the region for now.
+function blockedText(t) {
+  return typeof t === "string" && t.startsWith(BLOCKED_PREFIX);
+}
+function checkOrSkip(name, isBlocked, ok, detail = "") {
+  if (isBlocked && !ok) {
+    checks.push({ name, ok: true, detail: "SKIP - upstream blocked this run" });
+    console.log(`${name} - SKIP (upstream blocked, worker answered correctly)`);
+    return;
+  }
+  check(name, ok, detail);
+}
+
+// Retries one tools/call when the worker reports an upstream block.
+// Sleeps are wall-clock time (CI pays ~a minute); the loop is bounded
+// so a long outage still ends quickly instead of hanging the job.
+async function callWithRetry(name, args, { tries = 3, waitMs = 30000 } = {}) {
+  let last = null;
+  for (let attempt = 1; attempt <= tries; attempt++) {
+    const res = await rpc("tools/call", { name, arguments: args });
+    const text = res.result?.content?.[0]?.text ?? "";
+    if (!(res.result?.isError === true && blockedText(text))) return res;
+    last = res;
+    if (attempt < tries) await new Promise((r) => setTimeout(r, waitMs));
+  }
+  return last;
+}
+
 async function main() {
   // 0. Handshake.
   const init = await rpc("initialize", {
@@ -58,23 +97,33 @@ async function main() {
   check("all tools read-only", readonly);
 
   // 2. Search: compact cards, toman prices, real URLs.
-  const search = await rpc("tools/call", {
-    name: "search_digikala",
-    arguments: { query: "هدفون بی سیم", limit: 3 },
-  });
-  const sdata = JSON.parse(search.result?.content?.[0]?.text ?? "{}");
-  const cards = sdata.items ?? [];
-  check("search returns items", cards.length > 0, `${cards.length} items`);
+  const search = await callWithRetry("search_digikala", { query: "هدفون بی سیم", limit: 3 });
+  const stext = search.result?.content?.[0]?.text ?? "";
+  const sBlocked = search.result?.isError === true && blockedText(stext);
+  let cards = [];
+  try {
+    cards = sBlocked ? [] : (JSON.parse(stext).items ?? []);
+  } catch {
+    cards = [];
+  }
+  checkOrSkip("search returns items", sBlocked, cards.length > 0, sBlocked ? "" : `${cards.length} items`);
   const first = cards[0] ?? {};
-  check("card has toman price", typeof first.price_toman === "number", String(first.price_toman));
-  check("card has product URL", typeof first.url === "string" && first.url.includes("digikala.com"), first.url ?? "");
-  check("honest rating (null or number)", first.rating_stars === null || typeof first.rating_stars === "number");
+  checkOrSkip("card has toman price", sBlocked, typeof first.price_toman === "number", sBlocked ? "" : String(first.price_toman));
+  checkOrSkip("card has product URL", sBlocked, typeof first.url === "string" && first.url.includes("digikala.com"), sBlocked ? "" : (first.url ?? ""));
+  checkOrSkip("honest rating (null or number)", sBlocked, first.rating_stars === null || typeof first.rating_stars === "number");
 
   // 3. Details on a real id from search.
   if (first.id) {
-    const details = await rpc("tools/call", { name: "product_details", arguments: { id: first.id } });
-    const ddata = JSON.parse(details.result?.content?.[0]?.text ?? "{}");
-    check("details returns title", !!ddata.title, String(ddata.title ?? "").slice(0, 40));
+    const details = await callWithRetry("product_details", { id: first.id });
+    const dtext = details.result?.content?.[0]?.text ?? "";
+    const dBlocked = details.result?.isError === true && blockedText(dtext);
+    let title = "";
+    try {
+      title = dBlocked ? "" : String(JSON.parse(dtext).title ?? "");
+    } catch {
+      title = "";
+    }
+    checkOrSkip("details returns title", dBlocked, !!title, dBlocked ? "" : title.slice(0, 40));
   }
 
   // 4. Dead id: actionable error, not a crash.
