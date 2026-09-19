@@ -22,8 +22,8 @@ What this means:
 
 - **Stateless.** Every request stands alone - no sessions, no accounts, nothing to log in to.
 - **Read-only.** All 16 tools carry `readOnlyHint`. Nothing here can change, delete or order anything.
-- **No storage.** The only memory is a short-lived response cache (minutes, per isolate). Prices, stock and discounts are re-read from Digikala every time the cache expires.
-- **Rate-limit aware.** Requests are paced and retried with backoff, so bursts never leave this box as bursts.
+- **No user data.** Nothing about *you* is stored. The only memory is (a) a short-lived response cache - minutes, shared across the edge location so one fetch serves every nearby instance - and (b) Digikala's own CDN bot-check cookie (10-minute TTL), so one solved challenge spares every instance. Prices, stock and discounts are re-read from Digikala every time the cache expires.
+- **Rate-limit aware.** Requests are paced half a second apart, and throttles (Digikala's cookie challenge or HTTP 429) ride out an exponential, jittered backoff - list tools can also return partial results (`partial_failures`, `partial_scan_note`) instead of failing whole calls.
 - **Undocumented upstream.** Digikala's public API can change without notice - this service tracks it and adapts, which is exactly why the [verify script](scripts/verify-live.mjs) exists.
 
 Verify it yourself: `node scripts/verify-live.mjs` (needs node 18+, nothing to install).
