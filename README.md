@@ -22,7 +22,7 @@ Any MCP client, **one URL**. Cline / Cursor / Claude Desktop (`mcp.json` style):
 
 Then just talk: **"best Samsung phone under 20 million Toman"**, **"is this laptop any good?"**, **"what is on deal today?"**, **"what is popular in Iran right now?"**.
 
-Browser-based agents work too - the endpoint answers CORS preflights (`OPTIONS /mcp`).
+Agents running in a browser work too - the endpoint answers CORS preflights (`OPTIONS /mcp`).
 
 ## 16 tools
 
@@ -79,8 +79,8 @@ What this means:
 
 - **Stateless.** Every request stands alone - no sessions, no accounts, nothing to log in to.
 - **Read-only.** All 16 tools carry `readOnlyHint`. Nothing here can change, delete or order anything.
-- **No user data.** Nothing about *you* is stored. The only memory is (a) a short-lived response cache - minutes, shared across the edge location so one fetch serves every nearby instance - and (b) Digikala's own CDN bot-check cookie (10-minute TTL), so one solved challenge spares every instance. Prices, stock and discounts are re-read from Digikala every time the cache expires.
-- **Rate-limit aware.** Requests are paced half a second apart, and throttles (Digikala's cookie challenge or HTTP 429) ride out an exponential, jittered backoff - failing with an actionable message only after real retries, never as a burst.
+- **No user data.** Nothing about you is stored. What the server does keep: a short-lived response cache (a few minutes) and Digikala's own CDN bot-check cookie (10 minutes), so one solved challenge covers every instance. Prices, stock and discounts are re-read from Digikala every time the cache expires.
+- **Rate-limit aware.** Requests go out half a second apart. When Digikala pushes back - its cookie challenge or a 429 - the server waits it out with exponential backoff and a bit of randomness, instead of retrying in a burst.
 - **Undocumented upstream.** Digikala's public API can change without notice - this service tracks it and adapts, which is exactly why the [verify script](scripts/verify-live.mjs) exists.
 
 ## Trust, verified
