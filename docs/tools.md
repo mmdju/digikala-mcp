@@ -57,7 +57,7 @@ Browse **one category by id**, drill into sub-categories. Same compact cards as 
 | `page` | number | no | 1-based page number |
 | `limit` | number | no | Default 10, max 30 |
 | `min_price_toman` | number | no | Applied to the fetched page |
-| `max_price_toman` | number | no | Applied to the fetched page |
+| `max_price_toman` | number | no | Applied to the fetched page - **auto-switches sort to `cheapest`**, same as search |
 | `min_rating` | number | no | 0-5 |
 | `only_marketable` | boolean | no | Default true |
 
@@ -77,7 +77,7 @@ Specs are **capped at 60 attributes** unless narrowed.
 
 ## `product_price_chart`
 
-Short **price history** for one product: daily points with price in Toman, seller and warranty per point. A **rolling window of about a week, not full history** - use it to say whether now is cheap or not.
+Short **price history** for one product: daily points with price in Toman, seller and warranty per point. A **rolling window of about 30 days, not full history** - use it to say whether now is cheap or not.
 
 | Param | Type | Required | Notes |
 |---|---|---|---|

@@ -2,6 +2,14 @@
 
 Releases of the **hosted service** (`https://digikala-mcp.mmdju.workers.dev/mcp`). Dates are UTC.
 
+## 0.6.0 - 2026-09-20
+
+- **Budget parity in `browse_category`**: passing `max_price_toman` / `min_price_toman` now auto-switches the sort to cheapest-first, exactly like `search_digikala` - a budget filter finally means something on category pages too.
+- **Edge rate limit**: the public endpoint allows **60 requests per minute per IP** (HTTP 429 + `retry-after` when exceeded). A normal agent session never comes close, so ordinary use is unaffected - this only stops flood abuse of the service.
+- **Sharper `compare_products`**: same-titled specs from different groups (e.g. weight under dimensions vs. packaging) no longer merge into one row - differences are keyed on group + title.
+- **Faster multi-product calls**: `compare_products` and `get_products_batch` now overlap upstream reads, so shortlists come back in about half the time. The polite 500ms pacing to Digikala is unchanged.
+- Fix: `product_price_chart` covers a rolling window of **about 30 daily points** (was documented as "about a week").
+
 ## 0.5.0 - 2026-09-19
 
 - **Shared response cache** across the edge location (Cloudflare Cache API): one upstream fetch now serves every server instance for popular reads like `best_selling` and `incredible_offers` - same freshness windows, far fewer calls to Digikala.

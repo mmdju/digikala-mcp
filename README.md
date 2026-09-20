@@ -99,7 +99,7 @@ Digikala's public web API (**undocumented, may change without notice**). This pr
 
 ## Status
 
-**Free public service** on Cloudflare Workers. **Fair use applies** - if you hammer it, you will be rate-limited.
+**Free public service** on Cloudflare Workers. **Fair use: 60 requests per minute per IP** (HTTP 429 + `retry-after` when exceeded) - a normal agent session never comes close, so ordinary use is unaffected.
 
 ## License
 
