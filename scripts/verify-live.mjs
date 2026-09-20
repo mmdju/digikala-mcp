@@ -6,7 +6,9 @@
 // What it does: lists tools over Streamable HTTP, calls tools/list +
 // tools/call for a search, a details read and an invalid-id error path,
 // and asserts the honest-data contract (toman prices, null stars under
-// the review floor, empty envelope on misses). No source needed.
+// the review floor, empty envelope on misses), and compares the version the
+// live service reports against the newest release in this repo's CHANGELOG.
+// No source needed.
 //
 // Flake policy (why this file looks the way it does):
 // Digikala's CDN sometimes answers the GitHub Actions region with a
@@ -14,7 +16,10 @@
 // isError with "Digikala's CDN keeps asking...". That is an upstream
 // block, not a broken server, so those checks report SKIP (exit 0) and
 // only real contract violations report FAIL (exit 1).
+import { readFileSync } from "node:fs";
+
 const ENDPOINT = process.env.DIGIKALA_MCP_URL ?? "https://digikala-mcp.mmdju.workers.dev/mcp";
+const HEALTH = ENDPOINT.replace(/\/mcp\/?$/, "/health");
 const UA = { "user-agent": "digikala-mcp-verify/1.0" };
 // Matches the worker's BLOCKED_MSG (src/config.ts). If Digikala rewords
 // that message, update this prefix alongside it.
@@ -83,6 +88,20 @@ async function main() {
     clientInfo: { name: "verify-live", version: "1.0.0" },
   });
   check("handshake", !!init.result?.serverInfo, init.result?.serverInfo?.name ?? "");
+
+  // 0b. Release drift. A stale build speaks perfectly valid MCP, so every other
+  // check here stays green while the worker serves a version the docs left
+  // behind - which is exactly how this service once ran two releases back
+  // without anyone noticing. /health carries the version for this comparison,
+  // and the newest CHANGELOG heading is what it is compared against.
+  const health = await fetch(HEALTH, { headers: UA }).then((r) => r.json()).catch(() => ({}));
+  const live = health.version ?? init.result?.serverInfo?.version ?? "unknown";
+  const newest = readFileSync(new URL("../CHANGELOG.md", import.meta.url), "utf8").match(/^## (\d+\.\d+\.\d+)/m)?.[1];
+  check(
+    "live version matches the newest release in the CHANGELOG",
+    !!newest && live === newest,
+    `live=${live} changelog=${newest ?? "none"}`
+  );
 
   await rpc("notifications/initialized", {});
 

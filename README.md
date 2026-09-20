@@ -79,7 +79,7 @@ What this means:
 
 - **Stateless.** Every request stands alone - no sessions, no accounts, nothing to log in to.
 - **Read-only.** All 16 tools carry `readOnlyHint`. Nothing here can change, delete or order anything.
-- **No user data.** Nothing about you is stored. What the server does keep: a short-lived response cache (a few minutes) and Digikala's own CDN bot-check cookie (10 minutes), so one solved challenge covers every instance. Prices, stock and discounts are re-read from Digikala every time the cache expires.
+- **No user data.** Nothing about you is stored. What the server does keep: a short-lived response cache (a few minutes) and Digikala's own CDN bot-check cookie (10 minutes), so one solved challenge covers every instance in the same data centre. Prices, stock and discounts are re-read from Digikala every time the cache expires.
 - **Rate-limit aware.** Requests go out half a second apart. When Digikala pushes back - its cookie challenge or a 429 - the server waits it out with exponential backoff and a bit of randomness, instead of retrying in a burst.
 - **Undocumented upstream.** Digikala's public API can change without notice - this service tracks it and adapts, which is exactly why the [verify script](scripts/verify-live.mjs) exists.
 
@@ -99,7 +99,7 @@ Digikala's public web API (**undocumented, may change without notice**). This pr
 
 ## Status
 
-**Free public service** on Cloudflare Workers. **Fair use: 60 requests per minute per IP** (HTTP 429 + `retry-after` when exceeded) - a normal agent session never comes close, so ordinary use is unaffected.
+**Free public service** on Cloudflare Workers. **No request cap.** The endpoint does not count or throttle client requests - what it paces is its own calls to Digikala: half a second apart, with backoff when Digikala pushes back, so ordinary agent use never looks like a flood.
 
 ## License
 
