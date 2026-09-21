@@ -2,6 +2,15 @@
 
 Releases of the **hosted service** (`https://digikala-mcp.mmdju.workers.dev/mcp`). Dates are UTC.
 
+## 0.6.2 - 2026-09-21
+
+- **`find_best_value` no longer grades the wrong seller.** Live-tested: on two budget queries the graded storefront was absent from every pick - Digikala grades the product's *default* service, which is not always the one behind the picked price. The grade now comes from the variant carrying the pick's exact seller and price, with honest fallbacks; `top_pick_seller_source` names which path won (`variant_match`, `product_default` or `search_card` - the last means only the seller name is certain).
+- **Search results now admit fuzzy matching.** Digikala's search ORs tokens across the catalogue, so a query with no exact match still returns "relevant-ish" items (a gibberish query returned a book with an estimated 999 results). When no result contains every query term, the response now carries `low_confidence: true` with the exact `unmatched_terms`, and `estimate_capped: true` when the fuzzy count hit Digikala's ceiling.
+- **Clamped pages say so.** Text search serves 50 pages, categories 100; asking beyond now returns `page_clamped: true` and `page_requested` instead of silently correcting (search, category, reviews and Q&A).
+- **`search_filters` brands now self-rank.** When upstream sends per-option counts, brands list as `match_count` and real matches sort first - the raw facet pads the list with zero-match brands that previously looked relevant. Without counts, the response says the ordering is unknown rather than inventing one.
+- `compare_products` explains an empty difference list: identical twins produce no differences, and without a note that read as "no specs fetched".
+- `page` schema descriptions now state the caps out loud.
+
 ## 0.6.1 - 2026-09-20
 
 - **No client-side rate limit**: the per-IP request limiter is gone. It was per-isolate, so it never actually stopped a single client - measured against the live endpoint, 150 requests inside a minute drew zero 429s - while adding a failure mode of its own. What stays is the pacing on the server's *own* calls to Digikala: half a second apart, with backoff when Digikala pushes back.

@@ -1,6 +1,6 @@
 # Sample conversations (copy-paste)
 
-Seven flows that show what the server is good at. Each one is **user asks → agent calls → user gets**. Prices below are examples from testing, not live quotes - always open the product URL before buying.
+Eight flows that show what the server is good at. Each one is **user asks → agent calls → user gets**. Prices below are examples from testing, not live quotes - always open the product URL before buying.
 
 ---
 
@@ -119,6 +119,22 @@ Agent calls:
 ```
 
 User gets: **every colour/size with its own price, seller and warranty** (often cheaper than the default card price), plus the **brand ids to narrow the search** and the real price range.
+
+---
+
+## 8. "Search for this weird thing"
+
+User:
+
+> قندانور ذغالی افغانی داری؟
+
+Agent calls:
+
+```json
+{ "tool": "search_digikala", "arguments": { "query": "قندانور ذغالی افغانی", "limit": 5 } }
+```
+
+User gets: either real matches, or an honest "nothing actually matched" - the response carries **`low_confidence: true` + `unmatched_terms`** when Digikala's fuzzy search padded the page with partially-related items, so the agent says "I couldn't find that" instead of confidently showing a book for a sugar-bowl query.
 
 ---
 

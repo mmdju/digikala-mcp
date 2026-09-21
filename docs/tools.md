@@ -7,10 +7,11 @@ Every tool is **read-only** and needs **no credentials**. Result lists are **cap
 Shared conventions:
 
 - `limit` - how many items to return (default 10, max 30).
-- `page` - 1-based page number (search pages hold 20 products).
+- `page` - 1-based page number (search pages hold 20 products). Text search serves **50 pages**, categories **100** - asking beyond returns `page_clamped: true` + `page_requested` instead of silently correcting.
 - Price filters (`min_price_toman`, `max_price_toman`) and `has_discount` are **applied to the fetched page** - Digikala's own API ignores them, so pass a budget with `sort: cheapest` to see the global cheapest.
 - `min_rating` (0-5) - products with too few reviews to rate honestly are **excluded**, not guessed.
 - `only_marketable` (default true) - hides out-of-stock products. Set false to include them.
+- `total_items_estimate` is **Digikala's fuzzy count** - it drifts between pages, and `estimate_capped: true` means it hit Digikala's ceiling (~800 for text search).
 
 ## `digikala_suggest`
 
@@ -45,6 +46,8 @@ Search products, get **compact cards**: price in Toman, discount, rating, stock,
 | `ship_by_seller` | boolean | no | Only products that ship from their own seller |
 
 Budget questions (`"best X under Y"`) belong to **`find_best_value`**, not here - plain search only sees one page.
+
+Honesty fields: Digikala's search **ORs its tokens**, so a query with no exact match still returns "relevant-ish" items. When no result contains every query term, the response carries `low_confidence: true` with the exact `unmatched_terms` - rephrase before trusting such results.
 
 ## `browse_category`
 
@@ -123,7 +126,7 @@ Returns: `variants` (colour, size, `price_toman`, seller + grade + trust, warran
 
 ## `search_filters`
 
-**What can be filtered for a query**: brand ids with Persian/English names, colour ids, category ids, the real price range in Toman, seller types and attribute groups (OS, storage...). Facets only, no products.
+**What can be filtered for a query**: brand ids with Persian/English names, colour ids, category ids, the real price range in Toman, seller types and attribute groups (OS, storage...). Facets only, no products. Brands carry `match_count` when upstream sends per-option counts and real matches sort first; without counts the ordering is stated as unknown rather than invented - ignore `match_count: 0` brands.
 
 | Param | Type | Required | Notes |
 |---|---|---|---|
@@ -146,7 +149,7 @@ Written reviews for one product. Use `min_rate: 4` to see **what convinced peopl
 
 ## `compare_products`
 
-**2-5 products side by side**: price spread, rating, stock, seller grade, warranty - and **only the specs that actually differ** (identical rows are dropped).
+**2-5 products side by side**: price spread, rating, stock, seller grade, warranty - and **only the specs that actually differ** (identical rows are dropped). Identical twins (colour/size variants of one product) return an empty difference list with `spec_differences_note` explaining why.
 
 | Param | Type | Required | Notes |
 |---|---|---|---|
@@ -156,7 +159,7 @@ Written reviews for one product. Use `min_rate: 4` to see **what convinced peopl
 
 ## `find_best_value`
 
-**"Best X under Y Toman"**. Sorts by price, walks up to 3 pages until the budget is exhausted, keeps what fits, then **ranks by rating and discount** - and **grades the seller** of the top pick.
+**"Best X under Y Toman"**. Sorts by price, walks up to 3 pages until the budget is exhausted, keeps what fits, then **ranks by rating and discount** - and **grades the seller** of the top pick. The grade comes from the variant actually behind the pick; `top_pick_seller_source` names the path: `variant_match` (exact seller + price), `product_default` (Digikala's default service) or `search_card` (only the seller name is certain).
 
 | Param | Type | Required | Notes |
 |---|---|---|---|

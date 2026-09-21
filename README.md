@@ -51,8 +51,9 @@ Notes for agent builders:
 - Start vague queries with **`digikala_suggest`** to get real search terms and a `category_id`.
 - Anything with a **budget** or the word **"best"** goes to **`find_best_value`** - plain search only sees one page.
 - Product counts are **Digikala's own estimates** and drift between pages - treat them as approximate.
+- Digikala's search **ORs its tokens** - results that only partially match a query come back flagged `low_confidence` (with the exact `unmatched_terms`), and silently clamped pages report `page_clamped`.
 - Results are **capped** (default 10, max 30) to protect agent context. Specs are capped at 60 attributes unless narrowed.
-- See **[examples/sample-calls.md](examples/sample-calls.md)** for seven copy-paste conversation flows, and **[docs/tools.md](docs/tools.md)** for the full parameter reference.
+- See **[examples/sample-calls.md](examples/sample-calls.md)** for eight copy-paste conversation flows, and **[docs/tools.md](docs/tools.md)** for the full parameter reference.
 - Persian queries are normalized with [fa-text-utils](https://github.com/mmdju/fa-text-utils) (yeh/kaf folding, Persian digits, ZWNJ variants) - the same tiny helpers, published separately.
 
 ## How it works
