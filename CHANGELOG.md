@@ -2,6 +2,12 @@
 
 Releases of the **hosted service** (`https://digikala-mcp.mmdju.workers.dev/mcp`). Dates are UTC.
 
+## 0.6.3 - 2026-09-21
+
+- **Real rate limit: 60 requests per minute per IP** on POST /mcp, enforced with Cloudflare's Rate Limiting binding - HTTP 429 with `retry-after: 60` when exceeded. The 0.6.0 limiter was removed in 0.6.1 for honest reasons: its counter lived in the isolate, so every isolate had its own budget and no single client ever hit it (measured: 150 requests/minute, zero 429s). The binding's counter is shared across the whole edge location, so the limit finally means what it says - with the same per-location caveat: one IP gets a fresh 60 at each data centre. Normal use never notices; floods don't get far either, but this is abuse protection, not a global quota. Live-verified: a 200-request burst drew 94×200 / 106×429, with clean recovery after the window.
+- The limiter **fails open**: local runs (`npm run serve`, `wrangler dev`) have no binding and proceed unthrottled, and a throwing limiter never blocks a request - abuse protection must not become an availability dependency.
+- Fix: `/health` and the MCP handshake report the deployed version again (0.6.2 shipped with the constant still saying 0.6.1 - the release-drift check in this repo's live verify caught it).
+
 ## 0.6.2 - 2026-09-21
 
 - **`find_best_value` no longer grades the wrong seller.** Live-tested: on two budget queries the graded storefront was absent from every pick - Digikala grades the product's *default* service, which is not always the one behind the picked price. The grade now comes from the variant carrying the pick's exact seller and price, with honest fallbacks; `top_pick_seller_source` names which path won (`variant_match`, `product_default` or `search_card` - the last means only the seller name is certain).

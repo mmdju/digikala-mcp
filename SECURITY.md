@@ -4,7 +4,7 @@ Digikala MCP is a read-only public service. There is nothing to log in to and no
 
 - All 16 tools are read-only. No tool can change, delete or publish anything.
 - No API keys are needed to use the hosted endpoint.
-- Nothing is persisted server-side. The only state is a short-lived cache of upstream responses plus Digikala's own CDN bot-check cookie (10 minutes), both scoped to the data centre handling the request and never readable from another one. There is no request counter and no client-side throttling.
+- Nothing is persisted server-side. The only state is a short-lived cache of upstream responses plus Digikala's own CDN bot-check cookie (10 minutes), both scoped to the data centre handling the request and never readable from another one. The one piece of per-client state is the abuse-protection counter behind the 60-requests-per-minute-per-IP limit on POST /mcp, kept by Cloudflare's rate limiting service per data centre - no IPs, keys or usage history are stored or readable.
 - Data comes from Digikala's public web API, which is undocumented and can change without notice. This project is not affiliated with or endorsed by Digikala.
 
 ## Reporting a Vulnerability
