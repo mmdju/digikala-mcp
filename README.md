@@ -33,7 +33,7 @@ Agents running in a browser work too - the endpoint answers CORS preflights (`OP
 | `browse_category` | Browse a category, **drill into sub-categories** |
 | `product_details` | Everything about one product: **price, seller, warranty, specs, reviews** |
 | `product_price_chart` | "Is now cheap?" - **short price history with seller per point** |
-| `product_questions` | "What did buyers ask?" - questions + answer counts |
+| `product_questions` | "What did buyers ask?" - questions with their answers, tagged seller / buyer / user |
 | `get_products_batch` | Shortlist cards for **up to 10 ids** - feeds `compare_products` |
 | `product_url` | Product id to **shareable URL** + title |
 | `product_variants` | "Which colour is cheapest?" - **every variant with its own price + seller** |

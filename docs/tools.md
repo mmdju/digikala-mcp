@@ -8,7 +8,7 @@ Shared conventions:
 
 - `limit` - how many items to return (default 10, max 30).
 - `page` - 1-based page number (search pages hold 20 products). Text search serves **50 pages**, categories **100** - asking beyond returns `page_clamped: true` + `page_requested` instead of silently correcting.
-- Price filters (`min_price_toman`, `max_price_toman`) and `has_discount` are **applied to the fetched page** - Digikala's own API ignores them, so pass a budget with `sort: cheapest` to see the global cheapest.
+- Price filters: pass `min_price_toman` **and** `max_price_toman` together and Digikala scopes the whole market (`price_filter_sent_upstream: true`). A one-sided bound only filters the fetched page. `has_discount`, `min_rating` and `only_marketable` are always page-local.
 - `min_rating` (0-5) - products with too few reviews to rate honestly are **excluded**, not guessed.
 - `only_marketable` (default true) - hides out-of-stock products. Set false to include them.
 - `total_items_estimate` is **Digikala's fuzzy count** - it drifts between pages, and `estimate_capped: true` means it hit Digikala's ceiling (~800 for text search).
@@ -90,7 +90,7 @@ Returns: `current_price_toman`, `cheapest_in_window_toman`, `window_days`, per-v
 
 ## `product_questions`
 
-**Questions buyers asked** about one product. Answers are often empty (sellers rarely reply), so this returns questions with their `answer_count` - not guessed answers.
+**Questions buyers asked** about one product, with the answers themselves. Answers are usually there: measured over 480 live questions, 88.8% had at least one and a quarter of all answers came from the seller. Each answer carries its `from` (`seller` / `buyer` / `user`), so an official reply is never read as word of mouth, and `answer_count` is the full count when only the first two answers are shown.
 
 | Param | Type | Required | Notes |
 |---|---|---|---|
@@ -126,22 +126,26 @@ Returns: `variants` (colour, size, `price_toman`, seller + grade + trust, warran
 
 ## `search_filters`
 
-**What can be filtered for a query**: brand ids with Persian/English names, colour ids, category ids, the real price range in Toman, seller types and attribute groups (OS, storage...). Facets only, no products. Brands carry `match_count` when upstream sends per-option counts and real matches sort first; without counts the ordering is stated as unknown rather than invented - ignore `match_count: 0` brands.
+**What can be filtered for a query**: brand ids with Persian/English names, colour ids, category ids, the real price range in Toman, seller types and attribute groups (OS, storage...). Facets only, no products.
+
+Digikala sends a query's whole brand catalogue here, not only the brands that matched - 63 brands for `گوشی موبایل`, Nokia and Motorola among them - and no per-brand count arrives, so the list is alphabetical rather than ranked. `total_brands` and `brands_truncated` say when the list was cut.
 
 | Param | Type | Required | Notes |
 |---|---|---|---|
 | `query` | string | **yes** | E.g. `گوشی`, `لپ تاپ` |
 
-Feed brand ids into `search_digikala` `brand_ids`, category ids into `category_id`. Price/colour filtering on search stays client-side.
+Feed brand ids into `search_digikala` `brand_ids`, category ids into `category_id`. Price filtering on search is upstream when both bounds are passed; colour stays client-side.
 
 ## `product_reviews`
 
-Written reviews for one product. Use `min_rate: 4` to see **what convinced people** rather than the complaints.
+Written reviews for one product, each with the buyer's `advantage` / `disadvantage` points when Digikala supplied them. Use `min_rate: 4` to see **what convinced people** rather than the complaints.
+
+`sentiment` (when present) is Digikala's own verdict across **all** reviews: one row per topic with how many reviews mention it and the positive / neutral / negative split - the product-level answer to "what do people like and dislike". `product_details` carries the same thing as `buyer_summary`.
 
 | Param | Type | Required | Notes |
 |---|---|---|---|
 | `id` | number | **yes** | The dkp- number |
-| `sort` | string | no | `newest` (default) · `buyers` · `likes` |
+| `sort` | string | no | `likes` (default) · `buyers` · `newest`. Only `likes` and `buyers` carry pros and cons - `newest` usually comes back with those fields stripped, so ask for it explicitly and expect a bare review. |
 | `page` | number | no | 1-based page number |
 | `limit` | number | no | Default 10, max 30 |
 | `buyer_only` | boolean | no | Only verified buyers |
