@@ -11,7 +11,7 @@ Shared conventions:
 - Price filters: pass `min_price_toman` **and** `max_price_toman` together and Digikala scopes the whole market (`price_filter_sent_upstream: true`). A one-sided bound only filters the fetched page. `has_discount`, `min_rating` and `only_marketable` are always page-local.
 - `min_rating` (0-5) - products with too few reviews to rate honestly are **excluded**, not guessed.
 - `only_marketable` (default true) - hides out-of-stock products. Set false to include them.
-- `total_items_estimate` is **Digikala's fuzzy count** - it drifts between pages, and `estimate_capped: true` means it hit Digikala's ceiling (~800 for text search).
+- `total_items_estimate` is **Digikala's own count**, and it drifts a little between calls. `estimate_capped: true` means the pager is on Digikala's 50-page ceiling, so the number is a floor rather than a census.
 
 ## `digikala_suggest`
 
@@ -35,8 +35,8 @@ Search products, get **compact cards**: price in Toman, discount, rating, stock,
 | `sort` | string | no | `relevance` · `popular` · `newest` · `best_selling` · `cheapest` · `expensive` · `fastest` · `buyers_choice` · `featured` |
 | `page` | number | no | 1-based page number |
 | `limit` | number | no | Default 10, max 30 |
-| `min_price_toman` | number | no | Applied to the fetched page |
-| `max_price_toman` | number | no | Applied to the fetched page - **auto-switches sort to `cheapest`** |
+| `min_price_toman` | number | no | Applied to the fetched page alone; pass it with `max_price_toman` to scope the whole market |
+| `max_price_toman` | number | no | With `min_price_toman` it scopes the market; alone it filters the page and **auto-switches sort to `cheapest`** |
 | `min_rating` | number | no | 0-5, low-review products excluded |
 | `only_marketable` | boolean | no | Default true |
 | `has_discount` | boolean | no | Only `discount_percent > 0` |
@@ -47,7 +47,7 @@ Search products, get **compact cards**: price in Toman, discount, rating, stock,
 
 Budget questions (`"best X under Y"`) belong to **`find_best_value`**, not here - plain search only sees one page.
 
-Honesty fields: Digikala's search **ORs its tokens**, so a query with no exact match still returns "relevant-ish" items. When no result contains every query term, the response carries `low_confidence: true` with the exact `unmatched_terms` - rephrase before trusting such results.
+Honesty fields: Digikala's search **ORs its tokens**, so a query with no exact match still returns "relevant-ish" items. When no result contains a query word at all, the response carries `low_confidence: true` with the exact `unmatched_terms`. When every word shows up somewhere but not in the same products, `items_with_all_terms` says how many results really match - check it before quoting the page as an answer.
 
 ## `browse_category`
 
@@ -55,7 +55,7 @@ Browse **one category by id**, drill into sub-categories. Same compact cards as 
 
 | Param | Type | Required | Notes |
 |---|---|---|---|
-| `category_id` | number | **yes** | E.g. `22` (mobile). From `digikala_suggest` or `best_selling` |
+| `category_id` | number | **yes** | E.g. `11` (mobile phones). From `digikala_suggest` or `best_selling` |
 | `sort` | string | no | Same 9 values as search |
 | `page` | number | no | 1-based page number |
 | `limit` | number | no | Default 10, max 30 |
@@ -66,7 +66,7 @@ Browse **one category by id**, drill into sub-categories. Same compact cards as 
 
 ## `product_details`
 
-**Everything about one product**: price and stock, seller name with grade and trust flags, warranty, rating, colours, grouped specifications, expert review, recent buyer comments.
+**Everything about one product**: price and stock, seller name with grade and trust flags, warranty, rating, colours, grouped specifications, expert review, recent buyer comments - plus `buyer_summary`, Digikala's own one-paragraph verdict with its short lists of what buyers liked and disliked.
 
 | Param | Type | Required | Notes |
 |---|---|---|---|
@@ -86,7 +86,7 @@ Short **price history** for one product: daily points with price in Toman, selle
 |---|---|---|---|
 | `id` | number | **yes** | The dkp- number |
 
-Returns: `current_price_toman`, `cheapest_in_window_toman`, `window_days`, per-variant `points` (`day`, `price_toman`, `seller`, `warranty`).
+Returns: `current_price_toman` (read from the product itself, since the chart's series are ordered by colour and the first one is not necessarily the default), `window_days`, and one series per colour/size with its own `cheapest_in_window_toman` and `points` (`day`, `price_toman`, `seller`, `warranty`). Compare the current price against the **same** series' low - a low from another colour is a different product's price, not a discount.
 
 ## `product_questions`
 
@@ -123,6 +123,8 @@ Product id to **shareable URL + title**. One cached read, not a URL guess - slug
 | `id` | number | **yes** | The dkp- number |
 
 Returns: `variants` (colour, size, `price_toman`, seller + grade + trust, warranty, `lead_days`), `cheapest_variant_toman`, `default_variant_cheapest`. `best_price_last_month` is Digikala's own flag, shown as-is.
+
+Colour and size are read from Digikala's `themes` list when present, which is where clothing keeps them - there the flat size field glues the two together (`سبز آبی - 3XL`) and this tool splits them. `cheapest_variant_toman` counts every priced variant, so check `in_stock` on the row before quoting it.
 
 ## `search_filters`
 
