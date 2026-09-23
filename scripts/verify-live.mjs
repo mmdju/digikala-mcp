@@ -21,9 +21,13 @@ import { readFileSync } from "node:fs";
 const ENDPOINT = process.env.DIGIKALA_MCP_URL ?? "https://digikala-mcp.mmdju.workers.dev/mcp";
 const HEALTH = ENDPOINT.replace(/\/mcp\/?$/, "/health");
 const UA = { "user-agent": "digikala-mcp-verify/1.0" };
-// Matches the worker's BLOCKED_MSG (src/config.ts). If Digikala rewords
-// that message, update this prefix alongside it.
-const BLOCKED_PREFIX = "Digikala's CDN keeps asking";
+// Prefixes the worker uses to say "upstream refused this region", newest
+// first. The 0.6.4 worker reworded this from "Digikala's CDN keeps asking" to
+// "Digikala is temporarily not serving data", and the verify script kept the
+// old string - so a genuine block counted as four failures and the badge went
+// red on a healthy service. Both spellings are matched, and any future
+// rewording is caught by the fallback below rather than silently missed.
+const BLOCKED_PREFIXES = ["Digikala is temporarily not serving data", "Digikala's CDN keeps asking"];
 
 let id = 1;
 async function rpc(method, params = {}) {
@@ -52,9 +56,14 @@ function check(name, ok, detail = "") {
 }
 
 // An upstream block is information, not a failure: the worker answered
-// correctly, Digikala just refused the region for now.
+// correctly, Digikala just refused the region for now. Matched on the two
+// known phrasings, plus the shape they share - a message that blames
+// Digikala's side and asks the caller to retry in about a minute - so a
+// future rewording is still read as a block instead of four red checks.
 function blockedText(t) {
-  return typeof t === "string" && t.startsWith(BLOCKED_PREFIX);
+  if (typeof t !== "string") return false;
+  if (BLOCKED_PREFIXES.some((p) => t.startsWith(p))) return true;
+  return /^digikala\b/i.test(t) && /retry/i.test(t) && /rate|block|serving data|temporar|throttl/i.test(t);
 }
 function checkOrSkip(name, isBlocked, ok, detail = "") {
   if (isBlocked && !ok) {
