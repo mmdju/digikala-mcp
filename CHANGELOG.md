@@ -2,8 +2,73 @@
 
 Releases of the **hosted service** (`https://digikala-mcp.mmdju.workers.dev/mcp`). Dates are UTC.
 
-The live service runs **0.7.0**. Its release notes are kept with the source; this file records
-releases up to 0.6.3, and the tool reference above describes the current server.
+## 0.7.0 - 2026-09-24
+
+A full audit of the projection against live Digikala payloads (250+ requests straight to
+`api.digikala.com`) turned up fifteen defects, several of which the tool descriptions actively
+denied. Confirmed before fixing, each with the live response in hand.
+
+**Reviews, questions and the "pros and cons" that were never missing**
+
+- **A review's pros and cons are now returned.** They arrive as a *list* of short strings and the
+  string-only `short()` turned every one of them into `null` - measured live, 95 filled values came
+  back and none survived. `product_details` also gains `buyer_summary`: Digikala's own one-paragraph
+  verdict plus its short lists of what buyers liked and disliked, which sat unread in the payload.
+- **The default review ordering changed to most-liked.** In `newest` order Digikala strips the pros
+  and cons almost every time (0 of 400 reviews, against ~12% for most-liked), so the default answer
+  lost exactly what callers ask for. `newest` still works and says so.
+- **`product_reviews` now carries `sentiment`** - Digikala's own aspect-level verdict across all
+  reviews: one row per topic (price, battery, build) with the positive / neutral / negative split.
+- **`product_questions` returns the answers.** The description claimed sellers rarely reply; measured
+  over 480 live questions, 88.8% carry an answer and a quarter of all replies come from the seller,
+  often with the one fact a shopper cannot get anywhere else. Each answer now carries its
+  `from` (seller / buyer / user) so an official reply is never read as word of mouth.
+
+**Filters that did not filter**
+
+- **A price range now reaches Digikala.** `/v1/search/` honours `price[min]` / `price[max]`, not the
+  `price_min` / `price_max` this server was sending - so every budget answer was one page of twenty
+  products presented as the market. Both bounds must be set; a lone `price[min]` returns nothing.
+  `price_filter_sent_upstream` says which of the two happened.
+- **Category scoping works.** A bare `category_id` is ignored outright - even a nonsense one returned
+  the entire 6.2-million catalogue, so a caller that asked for one category got everything with no
+  warning. It goes out as `categories[0]` now, which also fixes the `browse_category` fallback that
+  could return the whole catalogue.
+- **Category 22 is not mobile phones** (it is storage hardware; mobile is 11). The wrong id was in
+  the tool schema, the docs and a "verified live" comment.
+
+**Stock and variants**
+
+- **A missing stock count no longer reads as an empty shelf.** `marketable_stock` is usually absent
+  rather than zero - 56 of 62 variants on one t-shirt - and treating absence as zero reported a fully
+  buyable product as sold out. Only an explicit 0, a blocking status or a missing price means "no".
+- **Clothing colour and size are separate again.** They live in `themes[]`, not in `color` / `size`,
+  and the flat size field glues the two together (`سبز آبی - 3XL`).
+
+**Honesty fixes**
+
+- **Price charts no longer invent a variant id or a current price.** The series carry a 0-based
+  index (reported as `chart_index`, never `variant_id`) and are ordered by colour, so the first
+  series was not the current price - off by 10 million Toman on one laptop. The real current price
+  comes from the product payload now, and each series reports its own window low, since a low from
+  another colour is a different price.
+- **A removed product errors instead of answering.** `/v2/product/1/` returns
+  `{"product":{"is_inactive":true}}` - truthy, so the guard let it through and the response invented
+  a product with id 0 and an empty title.
+- **`low_confidence` stops firing on every Latin query.** The comparison was case-sensitive while
+  `faFold` never lower-cases, so `galaxy s25` was flagged unmatched while 18 of 20 titles carried
+  both words. It also reports `items_with_all_terms` so a page that is mostly partial matches is
+  visible without being called a failure.
+- **`search_filters` stops dropping the main brands.** Digikala sends a query's whole brand
+  catalogue and no per-brand count, so the list is alphabetical and the 30-brand cut threw away
+  Samsung. The limit went up and the cut is now reported via `total_brands` / `brands_truncated`.
+- **`estimate_capped` keys off the 50-page ceiling** rather than a near-1000 count, which left
+  several capped queries unflagged while the number was really a ceiling.
+
+## 0.6.4 - 2026-09-23
+
+- **Upstream blocks now fail fast instead of timing out the client.** Blocked-class retries (cookie challenge, 429, HTML bot pages) dropped from 5 to 2 - the old budget could hold a tool call past a minute while the MCP client gave up silently. The error text now says to retry in about a minute and that the failure was recorded.
+- **Temporary upstream-failure log (D1).** Blocked / network / 5xx failures write one best-effort row (tool, kind, status, path, product id - no queries, no IPs) so repeated timeouts can be diagnosed without user reports. Rows older than 30 days are pruned. Usage errors are never logged.
 
 ## 0.6.3 - 2026-09-21
 
