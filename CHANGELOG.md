@@ -2,6 +2,13 @@
 
 Releases of the **hosted service** (`https://digikala-mcp.mmdju.workers.dev/mcp`). Dates are UTC.
 
+## 0.8.3 - 2026-09-30
+
+- **The blocked-call window settles at 20 seconds.** One number, spent inside a single tool call:
+  the retries there are invisible to the caller, and only a call that runs past the window hears the
+  message. 20 is the middle - it gives up 5s earlier than the original 25 while still covering most
+  of the measured 15-30s block.
+
 ## 0.8.2 - 2026-09-30
 
 - **The wait inside a blocked call is 15 seconds now, down from 25.** The design is unchanged - the
