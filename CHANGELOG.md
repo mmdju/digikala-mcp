@@ -2,6 +2,54 @@
 
 Releases of the **hosted service** (`https://digikala-mcp.mmdju.workers.dev/mcp`). Dates are UTC.
 
+## 0.8.1 - 2026-09-30
+
+- **The per-IP limit on POST /mcp is 20 requests per minute now** (was 60). This number is abuse
+  protection, not a Digikala budget - the gate is what keeps the service's own calls to the CDN at
+  two in flight, half a second apart - and at 60 a single client could take half the service-wide
+  line on its own. A full agent session (handshake, a search, a few detail reads, one comparison)
+  still fits inside a minute; measured, that is roughly 15-20 POSTs. The counter is Cloudflare's and
+  per data centre, so one IP gets a fresh budget at each location, and the trusted-IP list is
+  untouched.
+
+## 0.8.0 - 2026-09-30
+
+Reliability work on the way this service talks to Digikala, measured against the live CDN before
+anything was written: two parallel requests are fine, six trip the cookie challenge, a block lasts
+15-30 seconds from the burst that invites it, and the old code quit on one at ~18s.
+
+**A block is now a wait, not a failure**
+
+- **Retries are bounded by time, not by an attempt count.** A blocked-class failure (cookie
+  challenge, 429, HTML bot page) gets a 25s wall-clock window with the same 2s / 4s / 8s backoff
+  inside it. Short blocks turn into real answers instead of errors, and no wait overshoots the
+  window. The message asks for 15-30 seconds rather than a minute.
+- **Failures are recorded for real.** The D1 log looked for a global `executionCtx` that Workers does
+  not have, so the insert was cancelled the moment the response went out - four confirmed blocks in
+  testing, zero rows. The handler takes the execution context and registers the write with
+  `waitUntil`.
+
+**One line for the whole service**
+
+- **Every upstream call asks a global gate for a turn first** (one Durable Object instance,
+  `digikala-global`). At most two calls in flight, 500ms apart - the load the CDN actually
+  tolerates - and after a block the whole service cools down for 10s, then 20s, then 30s until a call
+  comes back clean. Per-isolate pacing could never see the other isolates, which is exactly how
+  parallel callers from different isolates still arrived together.
+- **The gate is fail-open by design.** No binding, a timeout, a stub that throws or answers nonsense:
+  the request goes ahead with the old per-isolate pacing. A broken gate costs latency, never a call.
+  Queue waiting draws on the same 25s budget, so the gate cannot make a caller wait longer than it
+  already could, and a caller whose patience runs out while queued gets its own error kind (`wait`) -
+  the blocked count in D1 stays a count of real blocks.
+- **A Durable Object stub belongs to the request that made it.** Running the worker locally with four
+  parallel tool calls showed the first cut of this failing open on three of them ("Cannot perform I/O
+  on behalf of a different request"): the gate looked wired and did nothing. It is built inside the
+  request that uses it now.
+
+Also: the retry path no longer sleeps out a backoff after the final attempt (8s of the 20.5s a 5xx
+storm used to take), and CI runs on Node 22 - wrangler 4 requires it, and the old pin had been
+failing every run since the wrangler bump.
+
 ## 0.7.0 - 2026-09-24
 
 A full audit of the projection against live Digikala payloads (250+ requests straight to
