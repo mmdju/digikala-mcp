@@ -100,7 +100,7 @@ Digikala's public web API (**undocumented, may change without notice**). This pr
 
 ## Status
 
-**Free public service** on Cloudflare Workers. **60 requests per minute per IP** on POST /mcp (HTTP 429 + `retry-after` when exceeded; the counter is Cloudflare's rate limiting service, per data centre). A normal agent session never comes close - the limit only stops flood abuse. What the server still paces is its own calls to Digikala: half a second apart, with backoff when Digikala pushes back, so ordinary agent use never looks like a flood.
+**Free public service** on Cloudflare Workers. **20 requests per minute per IP** on POST /mcp (HTTP 429 + `retry-after` when exceeded; the counter is Cloudflare's rate limiting service, per data centre). A normal agent session never comes close - a full one (handshake, a search, a few detail reads, one comparison) measures at roughly 15-20 POSTs - so the limit only stops flood abuse. What the server still paces is its own calls to Digikala: at most two in flight, half a second apart, with backoff when Digikala pushes back, so ordinary agent use never looks like a flood.
 
 ## License
 
