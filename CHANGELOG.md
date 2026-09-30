@@ -2,6 +2,14 @@
 
 Releases of the **hosted service** (`https://digikala-mcp.mmdju.workers.dev/mcp`). Dates are UTC.
 
+## 0.8.2 - 2026-09-30
+
+- **The wait inside a blocked call is 15 seconds now, down from 25.** The design is unchanged - the
+  retry happens inside the same tool call, so the caller sees nothing until there is data or the
+  window runs out - and the window is shorter: a call that is going to fail says so about ten
+  seconds sooner. The price is giving up on the blocks that run to the long end of the measured
+  15-30s window. The one message a caller gets is unchanged.
+
 ## 0.8.1 - 2026-09-30
 
 - **The per-IP limit on POST /mcp is 20 requests per minute now** (was 60). This number is abuse
