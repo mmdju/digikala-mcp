@@ -7,9 +7,11 @@ Every tool is **read-only** and needs **no credentials**. Result lists are **cap
 Shared conventions:
 
 - `limit` - how many items to return (default 10, max 30).
-- `page` - 1-based page number (search pages hold 20 products). Text search serves **50 pages**, categories **100** - asking beyond returns `page_clamped: true` + `page_requested` instead of silently correcting.
-- Price filters: pass `min_price_toman` **and** `max_price_toman` together and Digikala scopes the whole market (`price_filter_sent_upstream: true`). A one-sided bound only filters the fetched page. `has_discount`, `min_rating` and `only_marketable` are always page-local.
-- `min_rating` (0-5) - products with too few reviews to rate honestly are **excluded**, not guessed.
+- `page` - 1-based page number (search pages hold 20 products). Text search serves **50 pages**, categories **100** - asking beyond returns `page_clamped: true` + `page_requested` instead of silently correcting. In practice most queries run out well before page 50 (a few hundred to ~900 results), so a page that comes back empty may simply be past the end.
+- Price filters: a **ceiling** (`max_price_toman`) reaches Digikala on its own and scopes the whole market; a **floor** (`min_price_toman`) alone is answered with nothing upstream, so it only filters the fetched page. Pass both and they travel as `price[min]` / `price[max]` (`price_filter_sent_upstream: true`). `has_discount`, `min_rating` and `only_marketable` are always page-local.
+- A budget also picks the sort: a ceiling sorts **cheapest** first, a floor on its own sorts **most expensive** first, so either one lands on the page it needs.
+- `min_rating` (0-5) - products with too few reviews to rate honestly are **excluded**, not guessed. `rating_stars` itself is reported whatever the count (the site shows "4.7 (3)"), and such a card carries `rating_low_sample: true`; `min_rating` still refuses to act on it.
+- `rating_low_sample: true` means fewer than 10 reviews. The score is real, the sample is thin.
 - `only_marketable` (default true) - hides out-of-stock products. Set false to include them.
 - `total_items_estimate` is **Digikala's own count**, and it drifts a little between calls. `estimate_capped: true` means the pager is on Digikala's 50-page ceiling, so the number is a floor rather than a census.
 
@@ -35,12 +37,15 @@ Search products, get **compact cards**: price in Toman, discount, rating, stock,
 | `sort` | string | no | `relevance` · `popular` · `newest` · `best_selling` · `cheapest` · `expensive` · `fastest` · `buyers_choice` · `featured` |
 | `page` | number | no | 1-based page number |
 | `limit` | number | no | Default 10, max 30 |
-| `min_price_toman` | number | no | Applied to the fetched page alone; pass it with `max_price_toman` to scope the whole market |
-| `max_price_toman` | number | no | With `min_price_toman` it scopes the market; alone it filters the page and **auto-switches sort to `cheapest`** |
+| `min_price_toman` | number | no | Page-local on its own (a lone floor returns nothing upstream); pair it with `max_price_toman` to scope the market. **Auto-switches the sort to `expensive`** |
+| `max_price_toman` | number | no | Reaches Digikala on its own and scopes the market; **auto-switches the sort to `cheapest`** |
 | `min_rating` | number | no | 0-5, low-review products excluded |
 | `only_marketable` | boolean | no | Default true |
 | `has_discount` | boolean | no | Only `discount_percent > 0` |
 | `brand_ids` | number[] | no | Up to 5 - get the ids from **`search_filters`** (no brand list exists anywhere else) |
+| `color_ids` | number[] | no | Up to 3 - from `search_filters` `colors`. Upstream calls them `color_palettes` and honours them |
+| `fast_delivery` | boolean | no | Only what Digikala ships quickly (upstream `has_jet_shipment_by_seller_or_digikala`, the site's ارسال سریع) |
+| `offline_stock` | boolean | no | Only what you can buy in person in Tehran (upstream `has_offline_shop_stock`) |
 | `seller_type` | string | no | `trusted` · `official` · `roosta` |
 | `ready_to_ship` | boolean | no | Only Digikala-warehouse stock (fastest delivery) |
 | `ship_by_seller` | boolean | no | Only products that ship from their own seller |
@@ -59,14 +64,30 @@ Browse **one category by id**, drill into sub-categories. Same compact cards as 
 | `sort` | string | no | Same 9 values as search |
 | `page` | number | no | 1-based page number |
 | `limit` | number | no | Default 10, max 30 |
-| `min_price_toman` | number | no | Applied to the fetched page |
-| `max_price_toman` | number | no | Applied to the fetched page - **auto-switches sort to `cheapest`**, same as search |
+| `min_price_toman` | number | no | Same rule as search: page-local alone, market-wide paired, **auto-switches the sort to `expensive`** |
+| `max_price_toman` | number | no | Reaches Digikala on its own; **auto-switches the sort to `cheapest`**, same as search |
 | `min_rating` | number | no | 0-5 |
 | `only_marketable` | boolean | no | Default true |
+| `has_discount` | boolean | no | Only `discount_percent > 0` (page-local) |
+| `brand_ids` | number[] | no | Up to 5, sent upstream as `brands[i]` |
+| `color_ids` | number[] | no | Up to 3, sent upstream as `color_palettes[i]` |
+| `seller_type` | string | no | `trusted` · `official` · `roosta` |
+| `ready_to_ship` / `ship_by_seller` / `fast_delivery` / `offline_stock` | boolean | no | The four on/off filters the category page offers |
 
 ## `product_details`
 
 **Everything about one product**: price and stock, seller name with grade and trust flags, warranty, rating, colours, grouped specifications, expert review, recent buyer comments - plus `buyer_summary`, Digikala's own one-paragraph verdict with its short lists of what buyers liked and disliked.
+
+Three more things the product page prints and no tool used to return:
+
+| Field | What it is |
+|---|---|
+| `delivery` | One row per carrier under "روش‌ها و هزینه‌های تحویل": `carrier`, `label`, `price` (as Digikala words it, e.g. `وابسته به سبد`), `free`, `arrives` (`today` / `tomorrow` / …) and a short `note`. |
+| `cheaper_offer` | Present only when **another storefront** lists the same product for less: `{ price_toman, seller, saves_toman, variant_id }`. This is the site's "این کالا را … ارزان‌تر بخرید". Absent when the cheaper row is the same shop (that is just another variant). |
+| `lowest_price_30d_toman` | `properties.min_price_in_last_month` - the cheapest this sold for in the last 30 days, so "is now a good price?" has an answer without calling `product_price_chart`. |
+| `digiplus_services` | The DigiPlus perks the page lists, when the product has any. |
+
+`badges` also carries the lines the site prints on the card: the urgency line ("تنها ۱ عدد در انبار باقی مانده"), free shipping, a gift and instalments.
 
 | Param | Type | Required | Notes |
 |---|---|---|---|
@@ -130,28 +151,32 @@ Colour and size are read from Digikala's `themes` list when present, which is wh
 
 **What can be filtered for a query**: brand ids with Persian/English names, colour ids, category ids, the real price range in Toman, seller types and attribute groups (OS, storage...). Facets only, no products.
 
-Digikala sends a query's whole brand catalogue here, not only the brands that matched - 63 brands for `گوشی موبایل`, Nokia and Motorola among them - and no per-brand count arrives, so the list is alphabetical rather than ranked. `total_brands` and `brands_truncated` say when the list was cut.
+Digikala sends a query's whole brand catalogue here, not only the brands that matched - 63 brands for `گوشی موبایل`, Nokia and Motorola among them. No per-brand count arrives, so the list is alphabetical and the response says so rather than pretending to rank; `total_brands` and `brands_truncated` say when the list was cut.
 
 | Param | Type | Required | Notes |
 |---|---|---|---|
 | `query` | string | **yes** | E.g. `گوشی`, `لپ تاپ` |
 
-Feed brand ids into `search_digikala` `brand_ids`, category ids into `category_id`. Price filtering on search is upstream when both bounds are passed; colour stays client-side.
+Feed brand ids into `search_digikala` `brand_ids`, colour ids into `color_ids`, category ids into `category_id`. The response also carries **`switches`** - the on/off filters this query accepts, each with upstream's own key and title - which map to `ready_to_ship`, `ship_by_seller`, `fast_delivery` and `offline_stock`.
 
 ## `product_reviews`
 
-Written reviews for one product, each with the buyer's `advantage` / `disadvantage` points when Digikala supplied them. Use `min_rate: 4` to see **what convinced people** rather than the complaints.
+Written reviews for one product, each with its rating, buyer flag and like/dislike counts, plus `advantage` / `disadvantage` points when Digikala supplied them. Re-measured 2026-10-04 over 180 reviews across all three orderings: those per-review fields usually come back empty now, so for "what do buyers like and dislike" read the `sentiment` block (or `buyer_summary` in `product_details`). Use `min_rate: 4` to see **what convinced people** rather than the complaints.
 
 `sentiment` (when present) is Digikala's own verdict across **all** reviews: one row per topic with how many reviews mention it and the positive / neutral / negative split - the product-level answer to "what do people like and dislike". `product_details` carries the same thing as `buyer_summary`.
 
 | Param | Type | Required | Notes |
 |---|---|---|---|
 | `id` | number | **yes** | The dkp- number |
-| `sort` | string | no | `likes` (default) · `buyers` · `newest`. Only `likes` and `buyers` carry pros and cons - `newest` usually comes back with those fields stripped, so ask for it explicitly and expect a bare review. |
+| `sort` | string | no | `likes` (default, most useful first) · `buyers` · `newest`. |
 | `page` | number | no | 1-based page number |
 | `limit` | number | no | Default 10, max 30 |
 | `buyer_only` | boolean | no | Only verified buyers |
 | `min_rate` | number | no | Only reviews with at least this rating (1-5) |
+
+Each review carries `rate`, `body`, `buyer`, `date`, `likes` **and `dislikes`** (the site shows both
+counts on every review), `advantage` / `disadvantage` where Digikala supplied them, and `photos` - the
+URLs of images the buyer attached - when there are any.
 
 ## `compare_products`
 
@@ -165,7 +190,7 @@ Written reviews for one product, each with the buyer's `advantage` / `disadvanta
 
 ## `find_best_value`
 
-**"Best X under Y Toman"**. Sorts by price, walks up to 3 pages until the budget is exhausted, keeps what fits, then **ranks by rating and discount** - and **grades the seller** of the top pick. The grade comes from the variant actually behind the pick; `top_pick_seller_source` names the path: `variant_match` (exact seller + price), `product_default` (Digikala's default service) or `search_card` (only the seller name is certain).
+**"Best X under Y Toman"**. Sorts by price, walks up to 3 pages until the budget is exhausted, keeps what fits, then **ranks by rating and discount** - and **grades the seller** of the top pick. The grade comes from the variant actually behind the pick; `top_pick_seller_source` names the path: `variant_match` (exact seller + price), `product_default` (Digikala's default service) or `search_card` (only the seller name is certain). Picks come from the pages that were walked, so a higher budget widens the field.
 
 | Param | Type | Required | Notes |
 |---|---|---|---|
@@ -176,20 +201,36 @@ Written reviews for one product, each with the buyer's `advantage` / `disadvanta
 | `limit` | number | no | How many picks (default 3, max 10) |
 | `pages` | number | no | Price-sorted pages to scan (default 1, max 3) - more pages, slower but wider |
 | `brand_ids` | number[] | no | Up to 5 |
+| `color_ids` | number[] | no | Up to 3, from `search_filters` |
 | `seller_type` | string | no | `trusted` · `official` · `roosta` |
-| `ready_to_ship` | boolean | no | Only Digikala-warehouse stock |
+| `ready_to_ship` / `fast_delivery` / `offline_stock` | boolean | no | The delivery switches |
 
 ## `incredible_offers`
 
-**Today's deals** (شگفت‌انگیز + other promotions) with discount percentages. Each card keeps its badge - a real شگفت‌انگیز deal vs an everyday discount.
+**Today's deals** (شگفت‌انگیز + other promotions) with discount percentages.
+
+The feed is **one main list plus five more sections** spread over about 40 pages (~780 deals), and
+the response never pretends otherwise: `sections` lists every section with how many deals it holds
+right now, `total_items_estimate` / `total_pages` say how big the whole thing is, and `fetched` /
+`matched_on_page` say how much of it this call looked at. Stock on deals moves fast.
 
 | Param | Type | Required | Notes |
 |---|---|---|---|
 | `limit` | number | no | Default 10, max 30 |
+| `page` | number | no | 1-based page of the chosen section (main list ≈ 40 pages) |
+| `sort` | string | no | `biggest_discount` · `popular` · `newest` · `best_selling` · `cheapest` · `expensive` · `fastest` · `buyers_choice` · `featured` |
+| `section` | string | no | `incredible` (default, the main list) · `running_out` · `lightening` · `fresh` · `deal_of_the_day` · `teasing` |
 | `min_discount` | number | no | Only deals at least this percent off |
 | `only_marketable` | boolean | no | Default true |
+| `only_fresh` | boolean | no | Only newly added deals - upstream, so it scopes the feed |
+| `min_price_toman` / `max_price_toman` | number | no | Pass **both**: they reach Digikala as a pair, otherwise they only filter this page |
+| `brand_ids` | number[] | no | Up to 5, from `search_filters` |
+| `seller_type` | string | no | `trusted` · `official` · `roosta` |
+| `ready_to_ship` / `ship_by_seller` | boolean | no | Upstream switches |
 
-Stock on deals moves fast.
+Cards carry a **countdown** while one runs: `ends_in_seconds` (what the site ticks down) and
+`ends_at` (the deadline), plus `sold_percent` when Digikala publishes it. Ordinary search cards
+carry none of these. The badge still tells a real شگفت‌انگیز from an everyday discount.
 
 ## `best_selling`
 
@@ -198,10 +239,15 @@ Stock on deals moves fast.
 | Param | Type | Required | Notes |
 |---|---|---|---|
 | `limit` | number | no | Default 10, max 30 |
-| `min_price_toman` | number | no | Applied to the fetched page |
-| `max_price_toman` | number | no | Applied to the fetched page |
+| `min_price_toman` | number | no | Page-local alone, market-wide paired |
+| `max_price_toman` | number | no | Reaches Digikala on its own |
 | `min_rating` | number | no | 0-5 |
 | `only_marketable` | boolean | no | Default true |
+
+`total_items_estimate` is the whole list (50 products), `total_items_scope` says so, and `fetched` is
+what this call looked at - so `returned: 3` is never mistaken for "only three bestsellers exist".
+All the category ids come back; if Digikala ever ships more than 30, `categories_truncated` says the
+list was cut.
 
 ## `similar_products`
 

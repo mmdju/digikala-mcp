@@ -104,4 +104,4 @@ Digikala's public web API (**undocumented, may change without notice**). This pr
 
 ## License
 
-Showcase repository (**docs only, no source published**) - see [LICENSE](LICENSE). Security notes in [SECURITY.md](SECURITY.md). Persian version in [README_FA.md](README_FA.md).
+Showcase repository - docs, examples and the standalone live-verify script, **no server source** - see [LICENSE](LICENSE). Security notes in [SECURITY.md](SECURITY.md). Persian version in [README_FA.md](README_FA.md).
