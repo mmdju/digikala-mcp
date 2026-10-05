@@ -74,6 +74,17 @@ Browse **one category by id**, drill into sub-categories. Same compact cards as 
 | `seller_type` | string | no | `trusted` · `official` · `roosta` |
 | `ready_to_ship` / `ship_by_seller` / `fast_delivery` / `offline_stock` | boolean | no | The four on/off filters the category page offers |
 
+Returns the cards plus `category`, `total_pages` / `total_items_estimate` and three context fields the
+payload always carried: **`total_slots`** (how many product slots this page holds - a page can carry 24
+slots and return 20 cards, and this is what tells the two apart), **`breadcrumb`** (every crumb with its
+link, the last one being this category) and **`page_description`**. All three come back on an empty page
+too, which is where they matter most: an empty answer that still says the page was full of slots is a
+page worth re-reading.
+
+One more flag: **`items_from_search: true`** appears when the category page carried no product widgets
+and the cards came from a search scoped to that category instead. In that case `total_items_estimate`
+describes the search, not the category - so read it only when the flag is absent.
+
 ## `product_details`
 
 **Everything about one product**: price and stock, seller name with grade and trust flags, warranty, rating, colours, grouped specifications, expert review, recent buyer comments - plus `buyer_summary`, Digikala's own one-paragraph verdict with its short lists of what buyers liked and disliked.

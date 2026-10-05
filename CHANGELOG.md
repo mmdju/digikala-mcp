@@ -2,6 +2,116 @@
 
 Releases of the **hosted service** (`https://digikala-mcp.mmdju.workers.dev/mcp`). Dates are UTC.
 
+## 0.8.4 - 2026-10-05 (UTC)
+
+- **Say which list you are looking at.** When a category page carries no product widgets the tool
+  falls back to a search scoped to that category - and said nothing about it, so a caller could read
+  search results as "page 100 of this category" while `total_items_estimate` quietly described the
+  search instead. Those answers now carry `items_from_search: true`.
+
+- **A category page now says how full it is.** `total_slots`, `breadcrumb` and the page's own
+  `page_description` all sit on the same wrapper as the pager, and none of them was read: a page
+  carrying 24 product slots came back with 20 cards and nothing to distinguish the two, and "where
+  am I" had to be answered by the caller. All three now travel with the answer - including on the
+  empty envelope, which is where they matter most: an empty page that still says it was full of
+  slots is a page worth re-reading.
+
+- **Sub-categories keep their size and their link.** `browse_category` returned only an id and a
+  title, cut to 12 with no flag, so "narrow into a sub-category" came without any hint of how big
+  each one was. `products_count` and the URL come back now, and the truncation is reported if it
+  ever happens.
+
+- **Reviews carry what the site shows, and a thin rating is no longer hidden.** Every review now
+  reports `dislikes` alongside `likes` (the site prints both counts) and `photos`, the URLs of the
+  images the buyer attached - both keys existed upstream and neither was read. `rating_stars` is
+  reported whatever the review count, because the site does: a three-review product showed "4.7 (3)"
+  there and `null` here. The doubt travels with the number instead of replacing it -
+  `rating_low_sample: true` below 10 reviews - and `min_rating` still refuses to act on such a score,
+  so a two-vote 5.0 is no more a "4 stars or better" match than it was before.
+
+- **`product_details` answers the questions the product page answers.** It now returns `delivery`
+  (every carrier with its cost wording, ETA and note - the block under "روش‌ها و هزینه‌های تحویل"),
+  `cheaper_offer` when another storefront has the same product for less (the site's "این کالا را
+  … ارزان‌تر بخرید"; on the audited product: another seller, 2,500,000 Toman cheaper), and
+  `lowest_price_30d_toman` from `properties.min_price_in_last_month` - a free 30-day low that
+  answers "was it cheaper last month?" without the price-history endpoint. `badges` grew the lines
+  the site prints on the card: the urgency line, free shipping, a gift and instalments.
+
+- **The filters the site offers are the filters this server accepts.** `color_ids` reaches Digikala
+  as `color_palettes[i]` (search_filters has been handing out colour ids with nothing to feed them
+  to), `fast_delivery` and `offline_stock` map onto the two delivery switches that had no parameter
+  at all, and `search_filters` now returns `switches` - every on/off filter for the query, under
+  upstream's own key and title. The `ready_to_ship` description claimed "fastest delivery"; the
+  upstream key it sends actually means "in Digikala's warehouse".
+- **A price ceiling travels on its own; a floor never claims otherwise.** `max_price_toman` alone now
+  reaches Digikala (verified: laptop search and category both scope). A lone `min_price_toman` is
+  still kept on the page - upstream answers it with nothing at all - and `price_filter_sent_upstream`
+  finally reports false for it instead of true. A budget also picks the direction: a ceiling sorts
+  cheapest first, a floor sorts most expensive first, so "everything above 200 million" no longer
+  comes back empty because the page was full of the cheapest items.
+- **`best_selling` stops truncating and starts counting.** It cut Digikala's 18 category ids to 12
+  with no flag (six ids the description promised for drilling down simply did not exist), and gave
+  no total. All of them come back now, plus `total_items_estimate` / `total_items_scope`.
+
+- **`incredible_offers` reads the whole deals feed.** It took page 1 of one list - 20 of about 780
+  deals, across 6 sections and ~40 pages - and called that "today's deals", with no total and no way
+  to page. It now reports `sections` (every section with its current size), `total_items_estimate`
+  and `total_pages`, accepts `page`, `sort` (nine orderings, including biggest-discount), `section`
+  (the six nodes), `only_fresh`, `brand_ids`, `seller_type`, both delivery switches and a price
+  pair - each one verified against the endpoint first. Cards carry the countdown the site shows:
+  `ends_in_seconds`, `ends_at` and `sold_percent`.
+
+- **`GET /mcp` stops feeding the daily budget.** That path was 99.8% of this account: 147,645
+  requests on 2026-10-03 and 193,770 on 2026-10-04, against a free plan of 100,000 - which is why
+  every worker on the account answered "error code: 1027". It was not crawlers. The Streamable HTTP
+  transport says a server answers GET with `text/event-stream` or else 405, and answering 200 with
+  HTML does not read as an error to a client: it reads as a stream that opened and immediately
+  ended. The official TypeScript SDK then hands the HTML to an SSE parser that discards every line,
+  and reschedules a reconnect with its attempt counter hard-coded to 0 - so `maxRetries: 2` never
+  applies. One GET a second, for the life of the process; two or three open sessions accounts for
+  the whole total. `GET /mcp` now answers **405** unless the client asked for `text/html`, which
+  every known client treats as the expected answer (typescript-sdk: `return`, "This is an expected
+  case that should not trigger an error"). The page still ships to browsers, and still links its
+  four fonts from `/doran-*.woff2` instead of inlining them (283 KB -> 29 KB).
+- **The cache header was not the fix, and it is worth saying so.** `cache-control: public,
+  max-age=300` changed nothing: `*.workers.dev` has no zone, so there is no edge cache in front of
+  the Worker - repeated requests carried no `cf-cache-status` and no `age`. The Cache API runs
+  *inside* the Worker, after the invocation has already been counted, and even Workers Cache bills a
+  hit as a standard request. Only Workers Static Assets are free and unlimited, and a page the
+  Worker builds is not one. Any claim that a header reduces this quota is wrong.
+- **An abandoned gate slot comes back on a deadline.** A `/done` that never arrived - a lost or
+  hanging Durable Object RPC - used to leave a slot busy until the instance was evicted, and the
+  second one did the same. The gate was fail-open in the comments and fail-closed in production;
+  each slot now expires after `GATE_SLOT_TTL_MS` (40s), and reclaiming one is pacing, never a block,
+  so it starts no cooldown.
+- **Answers say what the page actually held.** `best_selling` and `similar_products` blamed Digikala
+  when it was our own filters that emptied the page; `filterNote` reported a match count taken after
+  the result limit and claimed a price bound nobody had passed; `estimate_capped` announced a
+  50-page text-search cap on categories, which serve 100 (a 51-page category was flagged as capped
+  when it never was). `matched_on_page` is now counted before the limit, `filters_note` only appears
+  when a price bound was actually sent, and the price range is `returned_price_range_toman` - the
+  range of the cards returned, not of everything that matches.
+- **Category filters reach Digikala.** `browse_category` sent only `sort` and `page`, so `brand_ids`
+  and a price pair were dropped in silence. It now shares the filter builder with `search_digikala`,
+  and declares `brand_ids`, `seller_type`, `ready_to_ship`, `ship_by_seller` and `has_discount`
+  (all verified against `/v2/category/{id}/`). Its default order is `featured` again - what the
+  category page shows - instead of relevance, so page 1 is the same list the site has.
+- **A call cannot outlive the budget it promised.** The 20-second blocked-call window was only
+  checked at the top of the retry loop, so a call could run about 16s past it. The pacing wait and
+  the fetch are both inside the window now, and the challenge resend is skipped when there is no
+  time left to solve it.
+- **The suite runs every tool.** `npm test` reached 2 of the 16 handlers; it now runs all 16 against
+  recorded payloads, and four gates were added that the sibling projects already had: every test
+  file must be registered, the instructions must name every tool, `/health` must report the shipped
+  version, and `package.json` must match it. Nine tests that re-wrote production logic inside the
+  test are gone - one of them asserted a cap `get_products_batch` does not have (it rejects an 11th
+  id rather than slicing). `npm run fuzz` is offline for real now; it was making eight live requests
+  to api.digikala.com on every push.
+- **Docs corrected.** README said 81 assertions (187 tests now) and showed a `/health` body without
+  `version`; README_FA said 60 requests/minute (20); SECURITY.md said the endpoint does not rate
+  limit callers (it does, via the binding); architecture.md said "no database" (there is a Durable
+  Object and a D1 table). The CI badge pointed at a workflow that does not exist in that repository.
+
 ## 0.8.3 - 2026-09-30
 
 - **The blocked-call window settles at 20 seconds.** One number, spent inside a single tool call:
