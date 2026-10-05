@@ -2,6 +2,17 @@
 
 Releases of the **hosted service** (`https://digikala-mcp.mmdju.workers.dev/mcp`). Dates are UTC.
 
+## 0.8.5 - 2026-10-05 (UTC)
+
+- **A call cannot outlive the budget it promised.** Every fetch carried its own 15-second timeout and
+  nothing tied it to the call's deadline, so an attempt that had already started could run its full
+  timeout after the loop had run out of time: measured at 21.1 seconds against a 20-second promise in
+  last night's soak, and about 16 seconds over before the loop guard existed at all. The abort signal
+  is now whichever expires first - the per-fetch timeout or the remaining budget - and an abort we
+  caused ourselves reports the budget as the reason instead of "could not reach Digikala". A test
+  hangs a fetch and asserts the call ends in well under 3 seconds; it fails at 15 seconds without this
+  change.
+
 ## 0.8.4 - 2026-10-05 (UTC)
 
 - **Say which list you are looking at.** When a category page carries no product widgets the tool
