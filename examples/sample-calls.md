@@ -138,6 +138,23 @@ User gets: either real matches, or an honest "nothing actually matched" - the re
 
 ---
 
+## 9. "Who else sells this phone, and are they reliable?"
+
+User:
+
+> همین گوشی رو کجاها می‌فروشن؟ همه‌شون مطمئنن؟ ارزون‌ترینش کیه؟
+
+Agent calls:
+
+```json
+{ "tool": "product_sellers", "arguments": { "id": 12345678 } }
+{ "tool": "product_variants", "arguments": { "id": 12345678 } }
+```
+
+User gets: **every storefront behind that product, cheapest offer first** - with Digikala's own grade, trust flags and performance percentages for each (commitment, no-return, on-time shipping) - plus the per-colour/seller variant prices and, for the cheapest offer, its insurance, delivery providers and instalment/club-points extras when Digikala ships them.
+
+---
+
 ## Tips
 
 - Vague wording first goes to **`digikala_suggest`** - it turns slang into real search terms plus a `category_id`.

@@ -24,24 +24,27 @@ Then just talk: **"best Samsung phone under 20 million Toman"**, **"is this lapt
 
 Agents running in a browser work too - the endpoint answers CORS preflights (`OPTIONS /mcp`).
 
-## 16 tools
+## 19 tools
 
 | Tool | What it answers |
 |---|---|
 | `digikala_suggest` | Vague wording to **real search terms, category ids, trends** |
 | `search_digikala` | "Show me X", price checks, filters + sorting + paging |
 | `browse_category` | Browse a category, **drill into sub-categories** |
+| `browse_tag` | Digikala's **own tag shelves** - resolve a tag code, then browse it like a search |
 | `product_details` | Everything about one product: **price, seller, warranty, specs, reviews** |
 | `product_price_chart` | "Is now cheap?" - **short price history with seller per point** |
 | `product_questions` | "What did buyers ask?" - questions with their answers, tagged seller / buyer / user |
 | `get_products_batch` | Shortlist cards for **up to 10 ids** - feeds `compare_products` |
 | `product_url` | Product id to **shareable URL** + title |
-| `product_variants` | "Which colour is cheapest?" - **every variant with its own price + seller** |
+| `product_variants` | "Which colour is cheapest?" - **every variant with its own price + seller**, plus the offer extras (insurance, delivery, instalments) |
+| `product_sellers` | "Who else sells it, and are they reliable?" - **every storefront behind one product**, with Digikala's own performance numbers |
+| `brand_lookup` | "What is the id of brand Z?" - **any brand name to its id**, Persian or English |
 | `search_filters` | "Which brands exist for X?" - **brand/color/category ids + price range** |
 | `product_reviews` | "Is it any good?" - **buyer-only** and min-rating filters |
 | `compare_products` | "Which of these?" - **only the specs that actually differ** |
 | `find_best_value` | "Best X under Y Toman" - **ranked picks with seller grade** |
-| `incredible_offers` | **Today's deals** (شگفت‌انگیز + other promotions) |
+| `incredible_offers` | **Today's deals** (شگفت‌انگیز + other promotions, incl. the DigiPlus early-access window) |
 | `best_selling` | Site-wide bestsellers, with category ids to go deeper |
 | `similar_products` | "What else is like this?" - Digikala's own recommendations |
 
@@ -53,7 +56,7 @@ Notes for agent builders:
 - Product counts are **Digikala's own estimates** and drift between pages - treat them as approximate.
 - Digikala's search **ORs its tokens** - results that only partially match a query come back flagged `low_confidence` (with the exact `unmatched_terms`), and silently clamped pages report `page_clamped`.
 - Results are **capped** (default 10, max 30) to protect agent context. Specs are capped at 60 attributes unless narrowed.
-- See **[examples/sample-calls.md](examples/sample-calls.md)** for eight copy-paste conversation flows, and **[docs/tools.md](docs/tools.md)** for the full parameter reference.
+- See **[examples/sample-calls.md](examples/sample-calls.md)** for nine copy-paste conversation flows, and **[docs/tools.md](docs/tools.md)** for the full parameter reference.
 - Persian queries are normalized with [fa-text-utils](https://github.com/mmdju/fa-text-utils) (yeh/kaf folding, Persian digits, ZWNJ variants) - the same tiny helpers, published separately.
 
 ## How it works
@@ -79,7 +82,7 @@ flowchart LR
 What this means:
 
 - **Stateless.** Every request stands alone - no sessions, no accounts, nothing to log in to.
-- **Read-only.** All 16 tools carry `readOnlyHint`. Nothing here can change, delete or order anything.
+- **Read-only.** All 19 tools carry `readOnlyHint`. Nothing here can change, delete or order anything.
 - **No user data.** Nothing about you is stored. What the server does keep: a short-lived response cache (a few minutes) and Digikala's own CDN bot-check cookie (10 minutes), so one solved challenge covers every instance in the same data centre. Prices, stock and discounts are re-read from Digikala every time the cache expires.
 - **Rate-limit aware.** Requests go out half a second apart. When Digikala pushes back - its cookie challenge or a 429 - the server waits it out with exponential backoff and a bit of randomness, instead of retrying in a burst.
 - **Undocumented upstream.** Digikala's public API can change without notice - this service tracks it and adapts, which is exactly why the [verify script](scripts/verify-live.mjs) exists.
@@ -92,7 +95,7 @@ Don't take my word for it - check the live server yourself:
 node scripts/verify-live.mjs   # needs Node.js 18+, nothing to install
 ```
 
-It lists all 16 tools over Streamable HTTP, runs a search + details read + error paths, and asserts the honest-data contract. The same script runs **hourly in CI** ([![Live verify](https://github.com/mmdju/digikala-mcp/actions/workflows/verify.yml/badge.svg)](https://github.com/mmdju/digikala-mcp/actions/workflows/verify.yml)) - if the endpoint or Digikala's API drifts, the badge goes red. See [docs/architecture.md](docs/architecture.md) for how a question becomes an answer, and [examples/python.py](examples/python.py) for a copy-paste client.
+It lists all 19 tools over Streamable HTTP, runs a search + details read + error paths, and asserts the honest-data contract. The same script runs **hourly in CI** ([![Live verify](https://github.com/mmdju/digikala-mcp/actions/workflows/verify.yml/badge.svg)](https://github.com/mmdju/digikala-mcp/actions/workflows/verify.yml)) - if the endpoint or Digikala's API drifts, the badge goes red. See [docs/architecture.md](docs/architecture.md) for how a question becomes an answer, and [examples/python.py](examples/python.py) for a copy-paste client.
 
 ## Data source
 

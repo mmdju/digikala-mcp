@@ -1,6 +1,6 @@
 # Tool reference
 
-Input/output reference for all **16 tools**. Types only - no internals. For conversation flows, see [examples/sample-calls.md](../examples/sample-calls.md).
+Input/output reference for all **19 tools**. Types only - no internals. For conversation flows, see [examples/sample-calls.md](../examples/sample-calls.md).
 
 Every tool is **read-only** and needs **no credentials**. Result lists are **capped** (default 10, max 30). All prices are in **Toman**.
 
@@ -42,7 +42,7 @@ Search products, get **compact cards**: price in Toman, discount, rating, stock,
 | `min_rating` | number | no | 0-5, low-review products excluded |
 | `only_marketable` | boolean | no | Default true |
 | `has_discount` | boolean | no | Only `discount_percent > 0` |
-| `brand_ids` | number[] | no | Up to 5 - get the ids from **`search_filters`** (no brand list exists anywhere else) |
+| `brand_ids` | number[] | no | Up to 5 - get the ids from **`brand_lookup`** (any brand name), or **`search_filters`** for one query's brands |
 | `color_ids` | number[] | no | Up to 3 - from `search_filters` `colors`. Upstream calls them `color_palettes` and honours them |
 | `fast_delivery` | boolean | no | Only what Digikala ships quickly (upstream `has_jet_shipment_by_seller_or_digikala`, the site's ارسال سریع) |
 | `offline_stock` | boolean | no | Only what you can buy in person in Tehran (upstream `has_offline_shop_stock`) |
@@ -84,6 +84,24 @@ page worth re-reading.
 One more flag: **`items_from_search: true`** appears when the category page carried no product widgets
 and the cards came from a search scoped to that category instead. In that case `total_items_estimate`
 describes the search, not the category - so read it only when the flag is absent.
+
+## `browse_tag`
+
+Digikala's **own tag shelves** (the curated collections behind `/tags/`), in two modes:
+
+- **`query` only** - resolve a tag name to its code from the full 1000-tag list. Digikala never searches that list for us, so the matching runs here; returns `tags` (`code`, `title_fa`, `url`).
+- **`code`** - walk that shelf and get the **same compact cards as `search_digikala`**, with the same filters, sorting and paging, plus the tag's own title, pager and `total_items_estimate`.
+
+Tag pages answer with the search payload shape, so `sort`, `page` and every list filter behave exactly as they do on a search - and a budget still auto-picks the sort. With neither `code` nor `query` the call is a usage error.
+
+| Param | Type | Required | Notes |
+|---|---|---|---|
+| `code` | string | no | A tag code from an earlier call, e.g. `spongebob`. Browsing needs this |
+| `query` | string | no | Tag name or part of one, e.g. `باب اسفنجی`. Used only to find codes |
+| `sort` | string | no | Same values as `search_digikala` |
+| `page` | number | no | 1-based page number |
+| `limit` | number | no | Default 10, max 30 |
+| filters | - | no | `min_price_toman`, `max_price_toman`, `min_rating`, `only_marketable`, `has_discount`, `brand_ids`, `color_ids`, `seller_type`, `ready_to_ship`, `ship_by_seller`, `fast_delivery`, `offline_stock` |
 
 ## `product_details`
 
@@ -156,7 +174,30 @@ Product id to **shareable URL + title**. One cached read, not a URL guess - slug
 
 Returns: `variants` (colour, size, `price_toman`, seller + grade + trust, warranty, `lead_days`), `cheapest_variant_toman`, `default_variant_cheapest`. `best_price_last_month` is Digikala's own flag, shown as-is.
 
+Each row also carries the offer extras **when the payload ships them** - absent, not null, on rows that have none: `insurance_title`, `insurance_premium_toman`, `insurance_covers_count`, `delivery_providers` (up to 3 carrier names), `delivery_free`, `order_limit`, `installments` (Digikala's BNPL flag), `digiclub_points` and `satisfied_percent` - Digikala's own satisfaction percentage for that offer's raters (`statistics.total_rate`, one decimal when it has one), present only while that offer has raters.
+
 Colour and size are read from Digikala's `themes` list when present, which is where clothing keeps them - there the flat size field glues the two together (`سبز آبی - 3XL`) and this tool splits them. `cheapest_variant_toman` counts every priced variant, so check `in_stock` on the row before quoting it.
+
+## `product_sellers`
+
+**Every storefront selling one product**, cheapest offer first, with Digikala's own performance numbers for each: `grade`, `trusted` / `official`, `total_rate`, `commitment`, `no_return`, `on_time_shipping`, `rating_count`, `registration`, plus `offers` and `in_stock_offers`, `cheapest_toman` and the colours that seller covers.
+
+Digikala publishes **no seller catalogue**, and its search ignores every seller-filter spelling - so this per-product view is the only way to answer "who else sells it, at what price, and how reliable are they". `cheapest_seller` / `cheapest_toman` name the top offer; the percentages are Digikala's own, for that storefront. Cheap: the same cached product read as `product_details`.
+
+| Param | Type | Required | Notes |
+|---|---|---|---|
+| `id` | number | **yes** | The dkp- number |
+
+## `brand_lookup`
+
+**Any brand name to its Digikala id**, Persian or English, from the whole brand catalogue - not just the brands that appear for one query. Exact names rank before prefixes, which rank before mid-string hits; `total_in_catalogue` says how many matched before the `limit`.
+
+Digikala's brand endpoint ignores its own search parameter, so the full list is fetched once (cached 6h) and matched here. Feed the id into `search_digikala` `brand_ids`.
+
+| Param | Type | Required | Notes |
+|---|---|---|---|
+| `query` | string | **yes** | Brand name or part of one, e.g. `ایسوس`, `asus` |
+| `limit` | number | no | Default 20, max 50 |
 
 ## `search_filters`
 
@@ -168,7 +209,7 @@ Digikala sends a query's whole brand catalogue here, not only the brands that ma
 |---|---|---|---|
 | `query` | string | **yes** | E.g. `گوشی`, `لپ تاپ` |
 
-Feed brand ids into `search_digikala` `brand_ids`, colour ids into `color_ids`, category ids into `category_id`. The response also carries **`switches`** - the on/off filters this query accepts, each with upstream's own key and title - which map to `ready_to_ship`, `ship_by_seller`, `fast_delivery` and `offline_stock`.
+Feed brand ids into `search_digikala` `brand_ids` (or resolve any brand directly with `brand_lookup`), colour ids into `color_ids`, category ids into `category_id`. The response also carries **`switches`** - the on/off filters this query accepts, each with upstream's own key and title - which map to `ready_to_ship`, `ship_by_seller`, `fast_delivery` and `offline_stock`.
 
 ## `product_reviews`
 
@@ -220,17 +261,22 @@ URLs of images the buyer attached - when there are any.
 
 **Today's deals** (شگفت‌انگیز + other promotions) with discount percentages.
 
-The feed is **one main list plus five more sections** spread over about 40 pages (~780 deals), and
+The feed is **one main list plus six more sections** spread over about 40 pages (~780 deals), and
 the response never pretends otherwise: `sections` lists every section with how many deals it holds
 right now, `total_items_estimate` / `total_pages` say how big the whole thing is, and `fetched` /
 `matched_on_page` say how much of it this call looked at. Stock on deals moves fast.
+
+One of those sections is `early_access` - the DigiPlus early-access window (دسترسی زودتر و تخفیف
+بیشتر). Digikala announces it before it opens, and while it is only announced its section row
+carries `teasing: true` and no deals, so an empty shelf is never reported as a scheduled window (or
+the other way round).
 
 | Param | Type | Required | Notes |
 |---|---|---|---|
 | `limit` | number | no | Default 10, max 30 |
 | `page` | number | no | 1-based page of the chosen section (main list ≈ 40 pages) |
 | `sort` | string | no | `biggest_discount` · `popular` · `newest` · `best_selling` · `cheapest` · `expensive` · `fastest` · `buyers_choice` · `featured` |
-| `section` | string | no | `incredible` (default, the main list) · `running_out` · `lightening` · `fresh` · `deal_of_the_day` · `teasing` |
+| `section` | string | no | `incredible` (default, the main list) · `running_out` · `lightening` · `fresh` · `deal_of_the_day` · `teasing` · `early_access` |
 | `min_discount` | number | no | Only deals at least this percent off |
 | `only_marketable` | boolean | no | Default true |
 | `only_fresh` | boolean | no | Only newly added deals - upstream, so it scopes the feed |

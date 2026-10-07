@@ -22,7 +22,7 @@ flowchart LR
 What this means:
 
 - **No sessions.** Every request stands alone - no accounts, nothing to log in to, nothing to resume.
-- **Read-only.** All 16 tools carry `readOnlyHint`. Nothing here can change, delete or order anything.
+- **Read-only.** All 19 tools carry `readOnlyHint`. Nothing here can change, delete or order anything.
 - **No user data.** Nothing about you is stored. What the server does keep: a short-lived response cache (a few minutes), Digikala's own CDN bot-check cookie (10 minutes), and - in a D1 table - one row per *upstream failure* carrying only the tool name, error kind, status and request path. Never your query, your IP or a product title. Prices, stock and discounts are re-read from Digikala every time the cache expires.
 - **One gate for everyone.** Upstream calls pass through a single Durable Object, so the "at most two in flight, half a second apart" number holds across every isolate and every data centre - a per-isolate counter cannot see the others. When Digikala pushes back - its cookie challenge or a 429 - the gate makes the whole service wait it out instead of retrying in a burst, and every way the gate itself can fail is fail-open: a gate that is slow or absent means "go ahead".
 - **Rate-limited at the edge.** POST /mcp allows 20 requests a minute per IP, counted by Cloudflare's rate limiting binding across the whole edge location.

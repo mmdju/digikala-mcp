@@ -2,6 +2,44 @@
 
 Releases of the **hosted service** (`https://digikala-mcp.mmdju.workers.dev/mcp`). Dates are UTC.
 
+## 0.9.0 - 2026-10-07 (UTC)
+
+- **`product_sellers`: every storefront behind one product.** Digikala publishes no seller catalogue,
+  and its search ignores every seller-filter spelling (tried against the live API: `seller_ids[]`,
+  `seller_id`, `seller_code` and about twenty more all answer exactly like a plain search). The
+  seller block rides on every variant row, and those rows were already being fetched - one audited
+  phone carried 14 rows from 8 storefronts. The new tool groups them per seller, cheapest offer
+  first, with Digikala's own numbers for each: grade, trust and official flags, rating count, the
+  performance percentages (commitment, no-return, on-time shipping), how long the seller has been
+  registered and how many of its offers are in stock.
+
+- **`product_variants` reports the offer block it was already carrying.** Insurance (title, premium,
+  covered parts), delivery providers and free delivery, the per-order limit, instalments, Digiclub
+  points and the satisfaction split across each offer's raters now travel with every variant row -
+  all of them present in the payload, none of them read until now. Keys stay absent on rows whose
+  payload has no such block, so an ordinary row does not gain nulls.
+
+- **`brand_lookup`: any brand name to its id.** The brand catalogue existed upstream and no tool read
+  it; `search_filters` could only show the brands of one query. The endpoint ignores its own search
+  parameter (verified live: the full 574KB list arrives for any `q=`), so it is fetched once, cached
+  six hours, and matched here - exact names first, then prefixes, then mid-string hits, Persian or
+  English. This also corrects the docs' claim that no brand list existed anywhere.
+
+- **`browse_tag`: Digikala's own tag shelves.** Call it with a name to resolve a tag code from the
+  full 1000-tag list, then with the code to get the same compact cards as a search - same filters,
+  sorting and paging. A tag page answers with the search payload shape (verified live on
+  `/v1/tags/spongebob/`: 20 products, its own pager and sort options), so there is no new shape to
+  trust, only a new shelf to walk.
+
+- **The deals feed's early-access window.** The DigiPlus early-access section (دسترسی زودتر و تخفیف
+  بیشتر) was the one node of the deals feed no section could reach. It is now `section:
+  "early_access"`, and while Digikala is only announcing it the section row carries `teasing: true` -
+  a scheduled window is never reported as an empty shelf.
+
+- **One rate limit for everyone.** The per-IP limiter carried an exception list with a single address
+  on it. The list is gone: every client spends the same budget, so the limiter is the one number that
+  explains a refusal.
+
 ## 0.8.5 - 2026-10-05 (UTC)
 
 - **A call cannot outlive the budget it promised.** Every fetch carried its own 15-second timeout and
