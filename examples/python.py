@@ -16,7 +16,7 @@ import urllib.request
 ENDPOINT = os.environ.get("DIGIKALA_MCP_URL", "https://digikala-mcp.mmdju.workers.dev/mcp")
 
 # Prefixes the worker uses to say "upstream refused this region", newest
-# first. Mirrors BLOCKED_PREFIXES in scripts/verify-live.mjs.
+# first; both ask the caller to retry in a moment.
 BLOCKED_PREFIXES = (
     "Digikala is temporarily not serving data",
     "Digikala's CDN keeps asking",
