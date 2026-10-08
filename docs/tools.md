@@ -94,6 +94,15 @@ Digikala's **own tag shelves** (the curated collections behind `/tags/`), in two
 
 Tag pages answer with the search payload shape, so `sort`, `page` and every list filter behave exactly as they do on a search - and a budget still auto-picks the sort. With neither `code` nor `query` the call is a usage error.
 
+One more flag, and it matters here: the shelf page is the slowest read in this server (measured 14.9s once
+against ~1.5s for a search), so it is the first thing a CDN block or a 20-second timeout takes out. When
+that happens the call falls back to a plain search for the shelf's name, taken from the cached tag list,
+and marks the answer **`items_from_search: true`** with a `note`. Those are not the shelf's own picks -
+verified live, the two lists share none of their first twenty products (2178 shelf items against 935 for
+the name search) - so read the flag before trusting `total_items_estimate`, and retry later for the real
+shelf. A code that is not in the tag list at all still fails with the shelf's own error: there would be
+nothing to search for.
+
 | Param | Type | Required | Notes |
 |---|---|---|---|
 | `code` | string | no | A tag code from an earlier call, e.g. `spongebob`. Browsing needs this |
@@ -242,7 +251,7 @@ URLs of images the buyer attached - when there are any.
 
 ## `find_best_value`
 
-**"Best X under Y Toman"**. Sorts by price, walks up to 3 pages until the budget is exhausted, keeps what fits, then **ranks by rating and discount** - and **grades the seller** of the top pick. The grade comes from the variant actually behind the pick; `top_pick_seller_source` names the path: `variant_match` (exact seller + price), `product_default` (Digikala's default service) or `search_card` (only the seller name is certain). Picks come from the pages that were walked, so a higher budget widens the field.
+**"Best X under Y Toman"**. Sorts by price, walks up to 3 pages until the budget is exhausted, keeps what fits, then **ranks by rating and discount** - and **grades the seller** of the top pick. The grade comes from the variant actually behind the pick; `top_pick_seller_source` names the path: `variant_match` (exact seller + price), `product_default` (Digikala's default service) or `search_card` (only the seller name is certain). Picks come from the pages that were walked, so a higher budget widens the field. A brand word in `query` is **not** a filter: the page is price-sorted, so pin the brand with `brand_ids` (id from `brand_lookup`) or the cheapest phones of any brand take the picks.
 
 | Param | Type | Required | Notes |
 |---|---|---|---|

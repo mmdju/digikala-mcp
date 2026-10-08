@@ -1,24 +1,25 @@
 # Sample conversations (copy-paste)
 
-Eight flows that show what the server is good at. Each one is **user asks → agent calls → user gets**. Prices below are examples from testing, not live quotes - always open the product URL before buying.
+Nine flows that show what the server is good at. Each one is **user asks → agent calls → user gets**. Prices below are examples from testing, not live quotes - always open the product URL before buying.
 
 ---
 
-## 1. "Best Samsung phone under 20 million Toman"
+## 1. "Best Samsung phone under 100 million Toman"
 
 User:
 
-> بهترین گوشی سامسونگ زیر ۲۰ میلیون چیه؟
+> بهترین گوشی سامسونگ زیر ۱۰۰ میلیون چیه؟
 
 Agent calls:
 
 ```json
-{ "tool": "find_best_value", "arguments": { "query": "گوشی سامسونگ", "budget_toman": 20000000, "limit": 3 } }
+{ "tool": "brand_lookup", "arguments": { "query": "سامسونگ" } }
+{ "tool": "find_best_value", "arguments": { "query": "گوشی موبایل", "brand_ids": [18], "budget_toman": 100000000, "limit": 3 } }
 ```
 
-User gets: **2-3 ranked picks** with price, discount, rating, **seller grade** (عالی / خیلی خوب / ...), product URL and a one-line *why* for each. If the budget fits nothing, the response says so and suggests raising it.
+User gets: **2-3 ranked picks** with price, discount, rating, product URL and a one-line *why* for each - plus, for the **top pick**, its **seller grade** (عالی / خیلی خوب / ...) with `top_pick_seller_source` saying where that grade came from, and the warranty. If the budget fits nothing, the response says so and suggests raising it.
 
-Why this tool: plain search only sees **one page** - `find_best_value` walks the cheapest pages until the budget is exhausted, then ranks by rating and discount.
+Why this tool: plain search only sees **one page** - `find_best_value` walks the cheapest pages until the budget is exhausted, then ranks by rating and discount. Note the two calls: a brand word in `query` is **not** a filter, because the pages it walks are price-sorted - the brand id from `brand_lookup` is what keeps every pick on brand.
 
 ---
 

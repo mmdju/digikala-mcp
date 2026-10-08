@@ -79,7 +79,7 @@ And a real answer, trimmed to its bones (Toman, as JSON numbers):
 | Tool | What it answers |
 |---|---|
 | `compare_products` | "Which of these?" - **only the specs that actually differ** |
-| `find_best_value` | "Best X under Y Toman" - **ranked picks with seller grade** |
+| `find_best_value` | "Best X under Y Toman" - **ranked picks, seller grade on the top pick** |
 | `get_products_batch` | Shortlist cards for **up to 10 ids** - feeds `compare_products` |
 | `similar_products` | "What else is like this?" - Digikala's own recommendations |
 
@@ -94,7 +94,7 @@ And a real answer, trimmed to its bones (Toman, as JSON numbers):
 
 - **All prices are in Toman** (1 Toman = 10 Rial). Prices, stock and discounts **move constantly** - always link the product URL so the user can confirm before buying.
 - Start vague queries with **`digikala_suggest`** to get real search terms and a `category_id`; get `brand_ids` from **`search_filters`** or **`brand_lookup`**.
-- Anything with a **budget** or the word **"best"** goes to **`find_best_value`** - plain search only sees one page.
+- Anything with a **budget** or the word **"best"** goes to **`find_best_value`** - plain search only sees one page. A brand word in `query` is **not** a filter - picks come from a price-sorted page - so pin the brand with `brand_ids` from `brand_lookup`.
 - Digikala's search **ORs its tokens**: results that only partially match come back flagged `low_confidence` with the exact `unmatched_terms`, and clamped pages report `page_clamped` instead of silently correcting.
 - Results are **capped** (default 10, max 30) to protect agent context; specs are capped at 60 attributes unless narrowed.
 - Product counts are **Digikala's own estimates** and drift between pages - treat them as approximate.
