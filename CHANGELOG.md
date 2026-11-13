@@ -2,6 +2,36 @@
 
 Releases of the **hosted service** (`https://digikala-mcp.mmdju.workers.dev/mcp`). Dates are UTC.
 
+## 0.9.1 - 2026-11-13 (UTC)
+
+- **The search move.** Digikala removed `/v1/search/`, `/v1/autocomplete/` and `/v2/category/{id}/` on
+  2026-11-13 - every one of them answers 404 for everyone, and their own site's search page spent the
+  day stuck on an empty "Loading" state. The same reads live under `/discovery/api/v1/` now: search and
+  autocomplete are re-pointed there, and every parameter this server sends was re-verified against the
+  new endpoint (`q`, `sort`, `page`, the `price[min]`/`price[max]` pair, `categories[0]`, `brands[0]`,
+  `seller_types[0]`, `has_ready_to_shipment`). `browse_category` catches the dead category page and
+  answers from the search scoped by `categories[0]` until Digikala's new category endpoint goes live -
+  `items_from_search: true` and a note say which one produced the rows, and a category page that comes
+  back will be picked up again without another change.
+
+- **The payload changes that came with the move.** Stock moved from `price` to the variant row on
+  discovery payloads (the old spot stays the fallback, so cached and offer payloads keep reading);
+  the attribute facets arrived flattened as `attribute_<id>` keys instead of one nested group, and
+  `search_filters` reads both shapes now, reporting the cut (`total_attributes` / `attributes_truncated`)
+  when a query ships more groups than the 20 it lists; `did_you_mean` and `related_search_words` no
+  longer ship upstream, so both keys are spread only when present.
+
+- **`total_hits`.** The discovery search ships its own hit count - a real number where the pager only
+  carries Digikala's drifting estimate. It travels next to `total_items_estimate` whenever the payload
+  carries it.
+
+- **`find_best_value` no longer recommends out-of-stock products.** The cheapest-sorted pages are full
+  of priced-but-empty rows, and the picks were the one list that never applied the only-marketable
+  default every other list tool applies. The quality-rescue pass filters them too.
+
+- **`product_reviews` counts `matched_on_page` before the limit is applied**, like every other tool's
+  note, instead of reporting the post-limit number.
+
 ## 0.9.0 - 2026-10-07 (UTC)
 
 - **`product_sellers`: every storefront behind one product.** Digikala publishes no seller catalogue,

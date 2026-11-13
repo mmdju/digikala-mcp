@@ -13,7 +13,7 @@ Shared conventions:
 - `min_rating` (0-5) - products with too few reviews to rate honestly are **excluded**, not guessed. `rating_stars` itself is reported whatever the count (the site shows "4.7 (3)"), and such a card carries `rating_low_sample: true`; `min_rating` still refuses to act on it.
 - `rating_low_sample: true` means fewer than 10 reviews. The score is real, the sample is thin.
 - `only_marketable` (default true) - hides out-of-stock products. Set false to include them.
-- `total_items_estimate` is **Digikala's own count**, and it drifts a little between calls. `estimate_capped: true` means the pager is on Digikala's 50-page ceiling, so the number is a floor rather than a census.
+- `total_items_estimate` is **Digikala's own count**, and it drifts a little between calls. `estimate_capped: true` means the pager is on Digikala's 50-page ceiling, so the number is a floor rather than a census. Search answers also carry **`total_hits`** when the payload ships it - Digikala's own hit count for the query, a real number beside the drifting estimate.
 
 ## `digikala_suggest`
 
@@ -28,7 +28,7 @@ Returns: `keywords`, `categories` (id + title), `trends`.
 
 ## `search_digikala`
 
-Search products, get **compact cards**: price in Toman, discount, rating, stock, seller name, badges, product URL.
+Search products, get **compact cards**: price in Toman, discount, rating, stock, seller name, badges, the row's own picture (`image`), product URL.
 
 | Param | Type | Required | Notes |
 |---|---|---|---|
@@ -81,9 +81,12 @@ link, the last one being this category) and **`page_description`**. All three co
 too, which is where they matter most: an empty answer that still says the page was full of slots is a
 page worth re-reading.
 
-One more flag: **`items_from_search: true`** appears when the category page carried no product widgets
-and the cards came from a search scoped to that category instead. In that case `total_items_estimate`
-describes the search, not the category - so read it only when the flag is absent.
+One more flag: **`items_from_search: true`** appears when the cards came from a search scoped to that
+category instead of the category page itself. Since Digikala removed its category page on 2026-11-13
+(a replacement is on their side and pending), this is the normal path for now, and the answer carries a
+`category_page_note` saying so - breadcrumb and sub-categories are unavailable while it lasts, and
+`total_items_estimate` describes the search. When their category endpoint returns, the full page comes
+back without another change on this side.
 
 ## `browse_tag`
 
