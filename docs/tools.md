@@ -45,12 +45,17 @@ Search products, get **compact cards**: price in Toman, discount, rating, stock,
 | `brand_ids` | number[] | no | Up to 5 - get the ids from **`brand_lookup`** (any brand name), or **`search_filters`** for one query's brands |
 | `color_ids` | number[] | no | Up to 3 - from `search_filters` `colors`. Upstream calls them `color_palettes` and honours them |
 | `fast_delivery` | boolean | no | Only what Digikala ships quickly (upstream `has_jet_shipment_by_seller_or_digikala`, the site's ارسال سریع) |
+| `same_day_delivery` | boolean | no | Only products with the site's تحویل ۳ ساعته (upstream `nearby_seller_shipment`) |
+| `next_day_delivery` | boolean | no | Only products with the site's تحویل سریع فردا (upstream `has_jet_delivery`) |
+| `attribute_filters` | object[] | no | Up to 6 `{attribute_id, option_id}` pairs from `search_filters` (`attributes` groups or `quick_filters`' ready-made `use`) - attribute narrows like بی‌سیم or مناسب گیمینگ |
 | `offline_stock` | boolean | no | Only what you can buy in person in Tehran (upstream `has_offline_shop_stock`) |
 | `seller_type` | string | no | `trusted` · `official` · `roosta` |
 | `ready_to_ship` | boolean | no | Only Digikala-warehouse stock (fastest delivery) |
 | `ship_by_seller` | boolean | no | Only products that ship from their own seller |
 
 Budget questions (`"best X under Y"`) belong to **`find_best_value`**, not here - plain search only sees one page.
+
+Search answers also carry **`query_category_ids`** when Digikala matched the query to a category (هدفون -> 211, گوشی سامسونگ -> 11) - the honest answer to "which category did this search actually mean", and a ready `category_id` for `browse_category`.
 
 Honesty fields: Digikala's search **ORs its tokens**, so a query with no exact match still returns "relevant-ish" items. When no result contains a query word at all, the response carries `low_confidence: true` with the exact `unmatched_terms`. When every word shows up somewhere but not in the same products, `items_with_all_terms` says how many results really match - check it before quoting the page as an answer.
 
@@ -221,7 +226,7 @@ Digikala sends a query's whole brand catalogue here, not only the brands that ma
 |---|---|---|---|
 | `query` | string | **yes** | E.g. `گوشی`, `لپ تاپ` |
 
-Feed brand ids into `search_digikala` `brand_ids` (or resolve any brand directly with `brand_lookup`), colour ids into `color_ids`, category ids into `category_id`. The response also carries **`switches`** - the on/off filters this query accepts, each with upstream's own key and title - which map to `ready_to_ship`, `ship_by_seller`, `fast_delivery` and `offline_stock`.
+Feed brand ids into `search_digikala` `brand_ids` (or resolve any brand directly with `brand_lookup`), colour ids into `color_ids`, category ids into `category_id`, and attribute pairs into `attribute_filters`. The response also carries **`switches`** - the on/off filters this query accepts, each with upstream's own key and title - which map to `ready_to_ship`, `ship_by_seller`, `fast_delivery`, `offline_stock`, `same_day_delivery` and `next_day_delivery`. It also carries **`quick_filters`** - the narrowing chips the site itself prints above the results (بی‌سیم، مناسب گیمینگ، a colour...), each with a ready-made `use` object to copy into `search_digikala`.
 
 ## `product_reviews`
 

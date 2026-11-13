@@ -2,6 +2,31 @@
 
 Releases of the **hosted service** (`https://digikala-mcp.mmdju.workers.dev/mcp`). Dates are UTC.
 
+## 0.9.2 - 2026-11-13 (UTC)
+
+- **`search_filters` carries the site's own narrowing chips.** The discovery search ships
+  `quick_filters` - the suggestions the site prints above the results (بی‌سیم، مناسب گیمینگ، a colour...)
+  - and each one now arrives with a ready-made `use` object an agent can copy straight into
+  `search_digikala`. Colour chips map to the existing `color_ids`, brand chips to `brand_ids`, and
+  attribute chips to the new `attribute_filters`. Unknown facet families and empty rows are dropped.
+
+- **`attribute_filters` on the list tools.** `search_digikala`, `browse_category`, `browse_tag` and
+  `find_best_value` accept up to 6 attribute/option pairs and send them upstream as one repeated
+  `attribute_<id>` key per value - verified live (873 -> 852 for one chip; two chips of one group OR
+  together). The `search_filters` response is where the ids come from: its `attributes` groups list
+  every option, its `quick_filters` pre-package the common ones.
+
+- **Two delivery toggles the site gained.** `same_day_delivery` (upstream `nearby_seller_shipment`,
+  the site's تحویل ۳ ساعته, verified 873 -> 819) and `next_day_delivery` (upstream `has_jet_delivery`,
+  the site's تحویل سریع فردا, verified 873 -> 751), on the same four list tools. A third option in
+  that box, `jet_sbs_city_ids`, is city-scoped and answers nothing as a plain flag - it stays
+  unexposed. `fast_delivery` keeps its old key and still works (verified 873 -> 752).
+
+- **`query_category_ids` on search answers.** `query_attributes.category_ids` is the category
+  Digikala matched the query to (هدفون -> 211, گوشی سامسونگ -> 11). It travels next to the totals -
+  the honest answer to "which category did this search actually mean", and a ready `category_id` for
+  `browse_category`.
+
 ## 0.9.1 - 2026-11-13 (UTC)
 
 - **The search move.** Digikala removed `/v1/search/`, `/v1/autocomplete/` and `/v2/category/{id}/` on
