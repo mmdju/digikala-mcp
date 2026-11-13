@@ -5,26 +5,47 @@ on:
     - cron: "17 * * * *"
   workflow_dispatch:
 
+# The hourly cadence never overlaps a finished run; this keeps a manual or
+# slow run from racing the next hour's start.
+concurrency:
+  group: live-verify
+  cancel-in-progress: false
+
 jobs:
-  # A red badge must mean "broken". Digikala's CDN intermittently
-  # challenges the Actions region, so a failed first run gets one
-  # retry (after a cooldown) before the badge is allowed to go red.
+  # A red badge must mean "broken". Digikala's CDN intermittently challenges
+  # the Actions region, and the challenge can outlast one cooldown, so a
+  # failed run is retried twice - after a 5-minute and then a 15-minute
+  # pause - before the badge is allowed to go red.
   verify:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
       - run: node scripts/verify-live.mjs
 
   retry:
     runs-on: ubuntu-latest
     needs: verify
     if: failure()
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
       - run: sleep 300 && node scripts/verify-live.mjs
+
+  retry-late:
+    runs-on: ubuntu-latest
+    needs: retry
+    if: failure()
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: sleep 900 && node scripts/verify-live.mjs
